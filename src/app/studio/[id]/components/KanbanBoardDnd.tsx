@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -14,6 +13,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useKanbanStore } from '@/lib/kanbanStore';
 
 export type Ticket = {
   id: string;
@@ -22,71 +22,6 @@ export type Ticket = {
   tags: string[];
   priority: string;
   assignee: string;
-};
-
-const kanbanData: {
-  columns: { id: string; title: string; ticketIds: string[] }[];
-  tickets: { [key: string]: Ticket };
-} = {
-  columns: [
-    {
-      id: 'todo',
-      title: 'To Do',
-      ticketIds: ['t1', 't2', 't3']
-    },
-    {
-      id: 'in-progress',
-      title: 'In Progress',
-      ticketIds: ['t4']
-    },
-    {
-      id: 'done',
-      title: 'Done',
-      ticketIds: ['t5']
-    }
-  ],
-  tickets: {
-    t1: {
-      id: 't1',
-      title: 'Setup Customer Touchpoints',
-      description: 'Integrate live chat widget and social media webhooks.',
-      tags: ['integration'],
-      priority: 'high',
-      assignee: 'Sarah'
-    },
-    t2: {
-      id: 't2',
-      title: 'Create API Gateway Service',
-      description: 'Build REST endpoints and route tickets to backend.',
-      tags: ['backend', 'api'],
-      priority: 'medium',
-      assignee: 'Jake'
-    },
-    t3: {
-      id: 't3',
-      title: 'Design Ticket Model',
-      description: 'Define schema for ticket content and status.',
-      tags: ['database', 'design'],
-      priority: 'low',
-      assignee: 'Nina'
-    },
-    t4: {
-      id: 't4',
-      title: 'Implement Sentiment Analysis',
-      description: 'Integrate NLP service for detecting ticket sentiment.',
-      tags: ['AI', 'NLP'],
-      priority: 'high',
-      assignee: 'Alex'
-    },
-    t5: {
-      id: 't5',
-      title: 'Deploy Staging Environment',
-      description: 'Prepare Dockerized staging setup on DigitalOcean.',
-      tags: ['devops'],
-      priority: 'medium',
-      assignee: 'Emily'
-    }
-  }
 };
 
 const KanbanTicket = ({ ticket, id }: { ticket: Ticket; id: string }) => {
@@ -151,49 +86,16 @@ const KanbanTicket = ({ ticket, id }: { ticket: Ticket; id: string }) => {
 };
 
 function KanbanBoardDnd() {
-  const [columns, setColumns] = useState(kanbanData.columns);
-  const [tickets, setTickets] = useState(kanbanData.tickets);
+  const columns = useKanbanStore((state) => state.columns);
+  const tickets = useKanbanStore((state) => state.tickets);
+  const moveTicket = useKanbanStore((state) => state.moveTicket);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // Find source column index
-    const fromColIdx = columns.findIndex((col) => col.ticketIds.includes(activeId));
-    if (fromColIdx === -1) return;
-
-    // Check if dropped into empty column (overId matches column id)
-    const isDroppedInEmptyColumn = columns.some((col) => col.id === overId);
-    const toColIdx = isDroppedInEmptyColumn
-      ? columns.findIndex((col) => col.id === overId)
-      : columns.findIndex((col) => col.ticketIds.includes(overId));
-
-    if (toColIdx === -1) return;
-
-    const newColumns = [...columns];
-    const fromColumn = { ...newColumns[fromColIdx] };
-    const toColumn = { ...newColumns[toColIdx] };
-
-    // Remove from old column
-    fromColumn.ticketIds = fromColumn.ticketIds.filter((id) => id !== activeId);
-
-    // Insert into target column
-    if (isDroppedInEmptyColumn) {
-      toColumn.ticketIds.push(activeId);
-    } else {
-      const overIndex = toColumn.ticketIds.indexOf(overId);
-      toColumn.ticketIds.splice(overIndex, 0, activeId);
-    }
-
-    newColumns[fromColIdx] = fromColumn;
-    newColumns[toColIdx] = toColumn;
-
-    setColumns(newColumns);
+    moveTicket(active.id as string, over.id as string);
   };
 
   return (

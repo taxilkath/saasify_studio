@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Plus, BarChart2, Flower, ListTodo, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import BlueprintReviewDialog from '@/components/BlueprintReviewDialog';
+import { useProjectStore } from '@/lib/projectStore';
 
 interface FormData {
     projectTitle: string;
@@ -27,17 +28,28 @@ interface FormData {
   ];
 
   export default function DashboardPage() {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
-    const [blueprintResult, setBlueprintResult] = useState<any>(null); // Store blueprint results
-    const [formData, setFormData] = useState({ projectTitle: '', projectDescription: '' });
-    const [editMode, setEditMode] = useState(false);
+    const {
+      projects,
+      isDialogOpen,
+      isGenerating,
+      currentStep,
+      blueprintResult,
+      formData,
+      editMode,
+      setProjects,
+      addProject,
+      setIsDialogOpen,
+      setIsGenerating,
+      setCurrentStep,
+      setBlueprintResult,
+      setFormData,
+      setEditMode,
+      fetchProjects,
+    } = useProjectStore();
     const { register, handleSubmit, watch, formState: { errors }, reset } = useForm<FormData>({
       defaultValues: formData
     });
     const router = useRouter();
-    const [projects, setProjects] = useState<any[]>([]);
 
     const description = watch('projectDescription', '');
     const charCount = description.length;
@@ -45,18 +57,18 @@ interface FormData {
 
     const handleOpenDialog = () => {
       setIsDialogOpen(true);
-      setIsGenerating(false); // Reset generation state when opening
+      setIsGenerating(false);
       setCurrentStep(0);
-      setBlueprintResult(null); // Clear previous results
+      setBlueprintResult(null);
       setEditMode(false);
-      reset(formData); // Pre-fill if editing
+      reset(formData);
     };
 
     const handleCloseDialog = () => {
       setIsDialogOpen(false);
-      setIsGenerating(false); // Ensure generation stops if dialog is closed
+      setIsGenerating(false);
       setCurrentStep(0);
-      setBlueprintResult(null); // Clear results on close
+      setBlueprintResult(null);
       setEditMode(false);
     };
 
@@ -74,11 +86,10 @@ interface FormData {
       setIsGenerating(false);
       setCurrentStep(0);
       setBlueprintResult(null);
-      reset(formData); // Pre-fill form with last data
+      reset(formData);
     };
 
     const handleApprovePlan = async () => {
-      // Placeholder: Call backend API to save project
       await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,9 +104,8 @@ interface FormData {
           },
         }),
       });
-      // For now, just add to projects array (mock)
-      projects.push({
-        id: projects.length + 1,
+      addProject({
+        id: (projects.length + 1).toString(),
         name: formData.projectTitle,
         description: formData.projectDescription,
         image: '/placeholder.svg',
@@ -110,9 +120,8 @@ interface FormData {
       setFormData(data);
       for (let i = 0; i < generationSteps.length; i++) {
         setCurrentStep(i + 1);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate work
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-      // Mock Blueprint Result (replace with actual generated data)
       const mockResult = {
         sixCorePillars: ['Pillar 1', 'Pillar 2', 'Pillar 3', 'Pillar 4', 'Pillar 5', 'Pillar 6'],
         coreFeatures: ['Feature A', 'Feature B', 'Feature C'],
@@ -128,19 +137,9 @@ interface FormData {
       simulateGeneration(data);
     };
 
-    
-
     useEffect(() => {
-      const fetchProjects = async () => {
-        const res = await fetch('/api/projects');
-        const data = await res.json();
-        if (data.success) {
-          setProjects(data.data);
-          console.log(data.data); 
-        }
-      };
       fetchProjects();
-    }, []);
+    }, [fetchProjects]);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 text-zinc-100 p-8">
