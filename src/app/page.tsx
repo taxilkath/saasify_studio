@@ -1,103 +1,58 @@
 import Image from "next/image";
 
-export default function Home() {
+export default function ProjectDetailPage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow mb-1" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+          Prodigies University
+        </h1>
+        <p className="text-zinc-400 text-base mt-1 max-w-2xl">
+          AI-powered web app that helps developers build high-quality projects
+        </p>
+      </div>
+      {/* Tabs */}
+      <div className="flex gap-6 border-b border-zinc-800 mb-8">
+        <button className="px-4 py-2 text-zinc-300 hover:text-white border-b-2 border-transparent hover:border-indigo-500 font-mono">User Flow</button>
+        <button className="px-4 py-2 text-zinc-300 hover:text-white border-b-2 border-transparent hover:border-indigo-500 font-mono">Tickets Board</button>
+        <button className="px-4 py-2 text-zinc-300 hover:text-white border-b-2 border-transparent hover:border-indigo-500 font-mono">Overview</button>
+        <button className="px-4 py-2 text-zinc-300 hover:text-white border-b-2 border-transparent hover:border-indigo-500 font-mono">Memory Bank</button>
+      </div>
+      {/* Kanban Board Placeholder */}
+      <div className="bg-zinc-900/80 rounded-xl shadow-xl p-8 mb-8 min-h-[300px]">
+        <h2 className="text-xl font-bold mb-4 font-mono text-white">Kanban Board</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-zinc-800 rounded-lg p-4 min-h-[200px]">
+            <h3 className="font-bold text-zinc-200 mb-2">Backlog</h3>
+            {/* Tickets go here */}
+          </div>
+          <div className="bg-zinc-800 rounded-lg p-4 min-h-[200px]">
+            <h3 className="font-bold text-zinc-200 mb-2">To Do</h3>
+          </div>
+          <div className="bg-zinc-800 rounded-lg p-4 min-h-[200px]">
+            <h3 className="font-bold text-zinc-200 mb-2">In Progress</h3>
+          </div>
+          <div className="bg-zinc-800 rounded-lg p-4 min-h-[200px]">
+            <h3 className="font-bold text-zinc-200 mb-2">Complete</h3>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+      {/* Flow Chart Placeholder */}
+      <div className="bg-zinc-900/80 rounded-xl shadow-xl p-8 mb-8 min-h-[200px]">
+        <h2 className="text-xl font-bold mb-4 font-mono text-white">User Flow / Architecture</h2>
+        <div className="h-32 flex items-center justify-center text-zinc-500">[Flow chart goes here]</div>
+      </div>
+      {/* Metrics/Overview Placeholder */}
+      <div className="bg-zinc-900/80 rounded-xl shadow-xl p-8 mb-8 min-h-[120px]">
+        <h2 className="text-xl font-bold mb-4 font-mono text-white">Overview & Metrics</h2>
+        <div className="h-16 flex items-center justify-center text-zinc-500">[Metrics and project details go here]</div>
+      </div>
+      {/* Memory Bank Placeholder */}
+      <div className="bg-zinc-900/80 rounded-xl shadow-xl p-8 min-h-[120px]">
+        <h2 className="text-xl font-bold mb-4 font-mono text-white">Memory Bank</h2>
+        <div className="h-16 flex items-center justify-center text-zinc-500">[Memory bank markdown/text goes here]</div>
+      </div>
     </div>
   );
 }

@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🚀 SaaSify Studio — AI SaaS Blueprint Generator & Project Management Platform
+SaaSify Studio is a full-stack AI-powered platform designed for web developers to ideate, validate, plan, and manage SaaS application projects. It generates technical blueprints, visual diagrams, kanban tasks, and progress trackers for your projects — all driven by AI.
 
-## Getting Started
+✨ Features
+📊 Dashboard
+List of all generated SaaS projects
 
-First, run the development server:
+Each project includes:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Project name
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Short description
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Quick access icons:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+📈 Analytics
 
-## Learn More
+🗺️ User Flow
 
-To learn more about Next.js, take a look at the following resources:
+📋 Tasks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+"Generate SaaS Blueprint" button to create new projects
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+⚙️ AI SaaS Blueprint Generator
+Dialog/modal to enter:
 
-## Deploy on Vercel
+📌 Project Title
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+📃 Project Description (up to 700 characters)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+On submit, real-time progress through 7 validation steps:
+
+📖 Analyzing project description
+
+📝 Generating project name
+
+📊 Evaluating market feasibility
+
+🧩 Identifying core features
+
+🖥️ Determining technical requirements
+
+📈 Creating development roadmap
+
+🔍 Generating improvement suggestions
+
+AI output:
+
+Six core pillars for the project
+
+Suggested core features
+
+Full tech stack recommendation
+
+Pricing model suggestions
+
+📁 Project Detail View
+Accessible by clicking on a project in the dashboard.
+
+Includes:
+
+🗺️ User Flow Diagram (visualizes app pages and their connections — built with React Flow)
+
+📋 Kanban Task Board (core features converted into kanban tickets — powered by @dnd-kit)
+
+📊 Project Overview (current progress, AI suggestions, roadmap, pricing, and tech stack)
+
+🧠 Memory Bank (MCP) — project-specific notes and AI context storage for future iterations and AI agent interactions
+
+🤖 MCP (Memory-Controlled Processing) Agent
+Connects projects to your AI co-pilot (Cursor / custom AI agent)
+
+Automates ticket status updates
+
+Supports AI-driven feature suggestions
+
+Future roadmap: AI-assisted code generation based on active tickets
+
+🔒 User Management
+Authentication and authorization via NextAuth.js
+
+User profiles and permissions (optional)
+
+⚙️ Settings
+User preferences
+
+Theme management
+
+AI integration settings (e.g., OpenAI API keys)
+
+📊 Technology Stack
+Frontend
+
+Next.js 14 (TypeScript)
+
+Tailwind CSS + Shadcn/ui
+
+Framer Motion
+
+Zustand (global state)
+
+React Query (server state)
+
+React Hook Form + Zod
+
+Lucide React (icons)
+
+React Flow (visual diagrams)
+
+Recharts (charts & analytics)
+
+@dnd-kit/core (drag-and-drop Kanban)
+
+React Hot Toast (notifications)
+
+Backend
+
+Next.js API Routes
+
+Prisma ORM
+
+Neon / Supabase (PostgreSQL database)
+
+NextAuth.js (authentication)
+
+OpenAI API (AI-powered workflows)
+
+Supabase Storage (for file uploads)
+
+Ably / Supabase Realtime (optional, for live progress updates)
+
+📌 Key Functionalities
+📊 Interactive SaaS dashboard
+
+⚙️ AI-powered SaaS idea validation & blueprint generation
+
+🗺️ Dynamic user flow diagrams
+
+📋 Kanban ticket boards
+
+🧠 Memory Bank (MCP) for AI context management
+
+🤖 AI agent integration support
+
+🗂️ User management and preferences
+
+🔐 Secure authentication
+
+🎨 Modern, responsive, dark-themed UI
+
+📍 Future Roadmap
+AI-powered ticket prioritization and code suggestion
+
+AI-driven UI wireframe generation
+
+Realtime multi-user collaboration
+
+Marketplace for blueprint templates
+
+PDF export of SaaS blueprints
+
