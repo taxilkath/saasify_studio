@@ -1,11 +1,11 @@
 import mongoose, { Schema, models, model } from 'mongoose';
 
-const ProjectSchema = new Schema({
-  name: { type: String, required: true },
-  description: { type: String },
-  blueprint: { type: Schema.Types.ObjectId, ref: 'Blueprint' },
+const BlueprintSchema = new Schema({
+  title: { type: String, required: true },
+  content: { type: Schema.Types.Mixed },
+  // Add more fields as needed for your blueprint
 }, {
   timestamps: true,
 });
 
-export default models.Project || model('Project', ProjectSchema); 
+export default models.Blueprint || model('Blueprint', BlueprintSchema); 

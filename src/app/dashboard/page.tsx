@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Plus, BarChart2, Flower, ListTodo, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,16 +15,6 @@ interface FormData {
     projectTitle: string;
     projectDescription: string;
   }
-
-  const projects = [
-    {
-      id: 1,
-      name: 'UDGCentralAI',
-      description: 'UDG Central is the ultimate platform for connecting brands with talented UGC creators and sponsors...',
-      image: '/placeholder.svg', // Replace with actual image or icon
-    },
-    // Add more mock projects as needed
-  ];
 
   const generationSteps = [
     'Analysing project description',
@@ -47,6 +37,7 @@ interface FormData {
       defaultValues: formData
     });
     const router = useRouter();
+    const [projects, setProjects] = useState<any[]>([]);
 
     const description = watch('projectDescription', '');
     const charCount = description.length;
@@ -96,7 +87,10 @@ interface FormData {
             name: formData.projectTitle,
             description: formData.projectDescription,
           },
-          blueprint: blueprintResult,
+          blueprint: {
+            title: formData.projectTitle,
+            content: blueprintResult,
+          },
         }),
       });
       // For now, just add to projects array (mock)
@@ -134,6 +128,20 @@ interface FormData {
       simulateGeneration(data);
     };
 
+    
+
+    useEffect(() => {
+      const fetchProjects = async () => {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        if (data.success) {
+          setProjects(data.data);
+          console.log(data.data); 
+        }
+      };
+      fetchProjects();
+    }, []);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 text-zinc-100 p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
@@ -153,9 +161,9 @@ interface FormData {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {projects.map((project) => (
             <div
-              key={project.id}
+              key={project._id}
               className="bg-zinc-900/80 backdrop-blur-md rounded-2xl shadow-xl p-7 flex flex-col gap-4 max-w-xs border border-zinc-800 hover:scale-105 hover:shadow-2xl transition-transform duration-200 cursor-pointer group"
-              onClick={() => router.push(`/studio/${project.id}`)}
+              onClick={() => router.push(`/studio/${project._id}`)}
             >
               <div className="h-24 w-full bg-gradient-to-tr from-red-500 to-yellow-300 rounded-lg flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
                 <span className="text-4xl">😎</span>
