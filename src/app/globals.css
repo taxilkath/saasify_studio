@@ -1,6 +1,43 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* If not already present from Tailwind base */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Your custom global styles */
+@layer utilities {
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .feature-item {
+    animation-name: fadeInUp;
+    animation-duration: 0.5s;
+    animation-fill-mode: forwards; /* Keeps the state of the last keyframe */
+    animation-timing-function: ease-out;
+  }
+}
+
+/* Example of Tailwind's animate-pulse if you need to customize it or ensure it's available */
+/* @keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+} */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

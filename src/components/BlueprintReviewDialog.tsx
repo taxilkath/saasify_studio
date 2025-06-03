@@ -47,6 +47,27 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
   onEditDetails,
   onApprovePlan,
 }) => {
+  // Handle form submission
+   const handleFormSubmit = async (data: any) => {
+    // Make API call with projectTitle and projectDescription
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectTitle: data.projectTitle,
+          projectDescription: data.projectDescription,
+        }),
+      });
+      const result = await response.json();
+      onFormSubmit(result); // Pass API result to parent handler
+    } catch (error) {
+      // Optionally handle error
+      console.error('API error:', error);
+      onFormSubmit({ error: 'Failed to generate blueprint.' });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-7xl lg:w-[90vw] mx-auto bg-zinc-900/90 backdrop-blur-lg rounded-2xl shadow-2xl border border-zinc-700 p-2 sm:p-4 md:p-8 lg:p-16 overflow-y-auto max-h-[90vh] min-h-[60vh] space-y-8">
@@ -67,7 +88,7 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
               <h2 className="text-2xl font-extrabold text-white mb-1">Project Details</h2>
               <p className="text-zinc-400 text-base mb-4">Describe your AI SaaS project briefly and let us do all the heavy lifting for you!</p>
             </div>
-            <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-6 mt-2">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-6 mt-2">
               <div>
                 <label htmlFor="projectTitle" className="block text-sm font-semibold text-zinc-300 mb-2">Project Title</label>
                 <Input
