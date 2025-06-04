@@ -1,17 +1,12 @@
 import { create } from 'zustand';
+import type { BlueprintData } from '../types/blueprint';
 
 export interface Project {
   id: string;
   name: string;
   description: string;
   image?: string;
-}
-
-export interface BlueprintResult {
-  sixCorePillars: string[];
-  coreFeatures: string[];
-  entireTechStack: string[];
-  pricingModels: string[];
+  _id?: string; // Allow for MongoDB _id
 }
 
 export interface FormData {
@@ -24,7 +19,7 @@ interface ProjectState {
   isDialogOpen: boolean;
   isGenerating: boolean;
   currentStep: number;
-  blueprintResult: BlueprintResult | null;
+  blueprintResult: BlueprintData | null;
   formData: FormData;
   editMode: boolean;
   setProjects: (projects: Project[]) => void;
@@ -32,7 +27,7 @@ interface ProjectState {
   setIsDialogOpen: (open: boolean) => void;
   setIsGenerating: (generating: boolean) => void;
   setCurrentStep: (step: number) => void;
-  setBlueprintResult: (result: BlueprintResult | null) => void;
+  setBlueprintResult: (result: BlueprintData | null) => void;
   setFormData: (data: FormData) => void;
   setEditMode: (edit: boolean) => void;
   fetchProjects: () => Promise<void>;

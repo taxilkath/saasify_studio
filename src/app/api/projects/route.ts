@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     // Validate request body
     const body = await req.json();
     const { projectTitle, projectDescription } = body;
-
+    
     if (!projectTitle || !projectDescription) {
       return NextResponse.json({
         success: false,
@@ -621,7 +621,8 @@ json :i will give idea to llm and in return i need thistype of json{
 
     // Call OpenAI API and get parsed JSON
     const aiResponseJSON = await callOpenAI(prompt);
-
+    
+    console.log("got json from openai ");
     if (!aiResponseJSON) {
       throw new Error('No response received from AI model');
     }
