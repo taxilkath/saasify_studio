@@ -47,12 +47,11 @@ const KanbanColumn = ({ id, title, children, onAdd, count }: KanbanColumnProps) 
   return (
     <div
       ref={setNodeRef}
-      className={`bg-gray-900 rounded-2xl p-4 min-w-[280px] max-w-[280px] flex flex-col border border-gray-700 ${isOver ? 'border-blue-400 bg-gray-800' : ''
-        }`}
+      className={`bg-gray-100 dark:bg-gray-900 rounded-lg p-4 w-[280px] flex flex-col border border-gray-200 dark:border-gray-700 ${isOver ? 'bg-gray-200 dark:bg-gray-800' : ''}`}
     >
       <div className="flex items-center gap-3 mb-4">
         <div className={`w-3 h-3 rounded-full ${getColumnColor(title)}`}></div>
-        <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-zinc-800 dark:text-white uppercase tracking-wide">
           {title}
         </h3>
         <span className="text-xs text-gray-400 font-medium">{count}</span>
@@ -60,7 +59,7 @@ const KanbanColumn = ({ id, title, children, onAdd, count }: KanbanColumnProps) 
       <div className="flex flex-col gap-3 min-h-[100px] flex-1">{children}</div>
       <button
         onClick={onAdd}
-        className="mt-4 text-xs text-gray-400 hover:text-white flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors"
+        className="mt-4 text-xs text-gray-500 dark:text-gray-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
       >
         <span className="text-lg">+</span>
         Add Ticket
@@ -98,31 +97,31 @@ const KanbanTicket = ({ ticket, isDragging = false }: { ticket: Ticket; isDraggi
       {...attributes}
       {...listeners}
       style={style}
-      className="bg-gray-800 rounded-xl p-4 shadow border border-gray-700 cursor-grab active:cursor-grabbing touch-none hover:shadow-lg transition-all"
+      className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow border border-gray-200 dark:border-gray-700 cursor-grab active:cursor-grabbing touch-none hover:shadow-lg transition-all"
     >
       <div className="flex justify-between items-start mb-3">
-        <h4 className="font-medium text-white text-sm leading-tight pr-2">{ticket.title}</h4>
+        <h4 className="font-medium text-zinc-900 dark:text-white text-sm leading-tight pr-2">{ticket.title}</h4>
         <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(ticket.priority)}`}>
           {ticket.priority}
         </span>
       </div>
 
-      <p className="text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">{ticket.description}</p>
+      <p className="text-gray-600 dark:text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">{ticket.description}</p>
 
       {ticket.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {ticket.tags.map((tag) => (
-            <span key={tag} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded border border-gray-600">
+            <span key={tag} className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
               {tag}
             </span>
           ))}
         </div>
       )}
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
         <span>Assignee: {ticket.assignee}</span>
-        <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center">
-          <span className="text-xs font-medium text-gray-200">{ticket.assignee.charAt(0).toUpperCase()}</span>
+        <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+          <span className="text-xs font-medium text-gray-800 dark:text-gray-200">{ticket.assignee.charAt(0).toUpperCase()}</span>
         </div>
       </div>
     </div>
@@ -158,33 +157,33 @@ function AddTicketDialog({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-900/90 p-8 rounded-3xl w-[420px] border border-gray-800 shadow-2xl backdrop-blur-xl relative">
-        <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
+      <div className="bg-white dark:bg-gray-900/90 p-8 rounded-3xl w-[420px] border border-gray-200 dark:border-gray-800 shadow-2xl backdrop-blur-xl relative">
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-6 tracking-tight">
           Add New Ticket
         </h2>
 
         <div className="flex flex-col gap-4">
           <input
-            className="w-full p-3 border border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-100 dark:bg-gray-800 text-zinc-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
             placeholder="Title"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
           />
           <textarea
-            className="w-full p-3 border border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition resize-none"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-100 dark:bg-gray-800 text-zinc-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition resize-none"
             placeholder="Description"
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             rows={4}
           />
           <input
-            className="w-full p-3 border border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-100 dark:bg-gray-800 text-zinc-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
             placeholder="Assignee"
             value={form.assignee}
             onChange={(e) => setForm((f) => ({ ...f, assignee: e.target.value }))}
           />
           <select
-            className="w-full p-3 border border-gray-700 rounded-xl bg-gray-800 text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-100 dark:bg-gray-800 text-zinc-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
             value={form.priority}
             onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
           >
@@ -193,7 +192,7 @@ function AddTicketDialog({
             <option value="high">High Priority</option>
           </select>
           <input
-            className="w-full p-3 border border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-100 dark:bg-gray-800 text-zinc-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
             placeholder="Tags (comma separated)"
             value={form.tags}
             onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
@@ -203,7 +202,7 @@ function AddTicketDialog({
         <div className="flex justify-end gap-4 mt-8">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition text-sm font-medium"
+            className="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition text-sm font-medium"
           >
             Cancel
           </button>

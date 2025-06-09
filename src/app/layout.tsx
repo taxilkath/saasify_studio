@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { ClerkProvider } from '@clerk/nextjs';
-import { dark } from '@clerk/themes';
-import { ThemeProvider } from "@/components/ThemeProvider"; // Import the new ThemeProvider
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +28,6 @@ export default function RootLayout({
   return (
     <ClerkProvider
       appearance={{
-        // Remove baseTheme: dark from here to let the ThemeProvider control it
         variables: { colorPrimary: '#6366f1' },
       }}
     >
@@ -37,19 +35,20 @@ export default function RootLayout({
         <head>
           <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
         </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {/* Wrap everything in the ThemeProvider */}
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
           >
-            <div className="flex min-h-screen bg-white dark:bg-zinc-950 text-black dark:text-zinc-100">
+            <div className="flex h-screen bg-background text-foreground overflow-hidden">
               <Navbar />
-              <main className="flex-1 p-4 sm:p-8 overflow-auto">{children}</main>
+              <main className="flex-1 overflow-y-auto">
+                <div className="p-4 sm:p-8">
+                  {children}
+                </div>
+              </main>
             </div>
           </ThemeProvider>
         </body>

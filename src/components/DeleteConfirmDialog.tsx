@@ -22,24 +22,25 @@ export default function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-zinc-950/80 backdrop-blur-3xl border border-zinc-700">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">Delete Project</DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogTitle className="text-xl font-bold text-zinc-900 dark:text-white">Delete Project</DialogTitle>
+          <DialogDescription className="text-zinc-500 dark:text-zinc-400">
             Are you sure you want to delete "{projectName}"? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end gap-4 mt-6">
+        <div className="flex justify-end gap-4 mt-4">
           <Button
-            variant="outline"
+            type="button"
+            variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
           >
             Cancel
           </Button>
           <Button
+            type="button"
+            variant="destructive"
             onClick={onConfirm}
-            className="bg-red-600 hover:bg-red-700 text-white"
           >
             Delete Project
           </Button>
@@ -47,4 +48,4 @@ export default function DeleteConfirmDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

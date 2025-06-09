@@ -1,11 +1,14 @@
+'use client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Zap, X, Workflow, LayoutGrid } from "lucide-react"; // Added Workflow, LayoutGrid
+import { Zap, X, Workflow, LayoutGrid, CheckCircle2, CircleDashed } from "lucide-react"; // Added Workflow, LayoutGrid, CheckCircle2, CircleDashed
 import React, { useRef, useEffect } from "react";
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { BlueprintData } from '../types/blueprint'; // Ensure this path and type are correct
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Controller } from 'react-hook-form';
 
 interface BlueprintReviewDialogProps {
   open: boolean;
@@ -21,8 +24,9 @@ interface BlueprintReviewDialogProps {
   MAX_CHARS: number;
   register: any; // From react-hook-form
   handleSubmit: any; // From react-hook-form
+  control: any;
   formData: { projectTitle: string; projectDescription: string };
-  setFormData: (data: { projectTitle: string; projectDescription: string }) => void;
+  setFormData: (data: any) => void;
   onStartOver: () => void;
   onEditDetails: () => void;
   onApprovePlan: () => void;
@@ -41,6 +45,7 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
   charCount,
   MAX_CHARS,
   register,
+  control,
   handleSubmit,
   formData,
   setFormData,
@@ -118,10 +123,10 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
   const sections = blueprintResult ? [
     {
       title: "Platform Overview",
-      icon: <span className="text-3xl text-sky-400 group-hover:text-sky-300 group-hover:scale-110 transition-all duration-200">🌌</span>,
+      icon: <span className="text-3xl">🌌</span>,
       content: (
-        <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
-          <strong className="text-indigo-400 block mb-1">{blueprintResult.platform.tagline}</strong>
+        <p className="text-zinc-600 dark:text-zinc-300">
+          <strong className="block mb-1 text-indigo-600 dark:text-indigo-400">{blueprintResult.platform.tagline}</strong>
           {blueprintResult.platform.description}
         </p>
       )
@@ -235,42 +240,37 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
     },
     {
       title: "Recommended Pricing Plans",
-      icon: <span className="text-3xl text-purple-400 group-hover:text-purple-300 group-hover:scale-110 transition-all duration-200">💲</span>,
+      icon: <span className="text-3xl">💲</span>,
       content: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {blueprintResult.recommended_pricing_plans.map((plan) => (
-            <div key={plan.name} className={`group/plan rounded-2xl p-6 flex flex-col gap-3 border ${plan.tag === 'Recommended' || plan.highlight ? 'border-indigo-500 bg-indigo-950/40 shadow-xl hover:shadow-[0_0_25px_theme("colors.indigo.500")] hover:border-indigo-400' : 'border-zinc-700 bg-zinc-800/80 hover:border-indigo-500/60 hover:bg-zinc-700/70'} transition-all duration-300 transform hover:scale-[1.03] hover:-translate-y-1`}>
+            <div 
+              key={plan.name} 
+              className={`group flex flex-col rounded-lg border p-6 transition-all duration-300
+                ${plan.highlight ? 'bg-primary/5 border-primary shadow-lg' : 'bg-card border-border'}`
+              }
+            >
               <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="text-xl font-bold text-white group-hover/plan:text-indigo-300 transition-colors">{plan.name}</span>
-                {plan.tag && <span className={`px-3 py-1 text-xs rounded-full font-semibold shadow-md ${plan.tag === 'Recommended' ? 'bg-indigo-500 text-white' : 'bg-yellow-500 text-black'}`}>{plan.tag}</span>}
+                <span className="text-xl font-bold text-foreground">{plan.name}</span>
+                {plan.tag && 
+                  <span className={`px-3 py-1 text-xs rounded-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {plan.tag}
+                  </span>
+                }
               </div>
-              <div className="text-4xl font-extrabold text-indigo-400 group-hover/plan:text-purple-400 transition-colors">{plan.price}</div>
-              <div className="text-zinc-300 group-hover/plan:text-zinc-200 text-sm mb-3 transition-colors">{plan.target}</div>
-              <strong className="text-zinc-100 text-sm mt-2">Features:</strong>
-              <ul className="text-zinc-200 text-sm space-y-1.5 list-disc list-inside ml-1">
-                {plan.features.map((f, i) => ( <li key={i} className="text-zinc-300 hover:text-white transition-colors">{f}</li> ))}
+              <div className="text-4xl font-extrabold text-primary">{plan.price}</div>
+              <p className="text-sm text-muted-foreground mb-3">{plan.target}</p>
+              
+              <strong className="text-sm text-foreground mt-2">Features:</strong>
+              <ul className="text-sm space-y-2 list-disc list-inside text-muted-foreground flex-grow">
+                {plan.features.map((f, i) => ( <li key={i}>{f}</li> ))}
               </ul>
+
               {plan.limitations && plan.limitations.length > 0 && (
                 <>
-                  <strong className="text-orange-400 text-xs font-semibold mt-3 pt-2 border-t border-zinc-700/50">Limitations:</strong>
-                  <ul className="text-zinc-400 text-xs space-y-1 list-disc list-inside ml-1">
-                    {plan.limitations.map((l, i) => ( <li key={`lim-${i}`} className="hover:text-orange-300 transition-colors">{l}</li>))}
-                  </ul>
-                </>
-              )}
-              {plan.additional_benefits && plan.additional_benefits.length > 0 && (
-                <>
-                  <strong className="text-green-400 text-xs font-semibold mt-3 pt-2 border-t border-zinc-700/50">Additional Benefits:</strong>
-                  <ul className="text-zinc-400 text-xs space-y-1 list-disc list-inside ml-1">
-                    {plan.additional_benefits.map((b, i) => (<li key={`ben-${i}`} className="hover:text-green-300 transition-colors">{b}</li>))}
-                  </ul>
-                </>
-              )}
-              {plan.premium_features && plan.premium_features.length > 0 && (
-                <>
-                  <strong className="text-sky-400 text-xs font-semibold mt-3 pt-2 border-t border-zinc-700/50">Premium Features:</strong>
-                  <ul className="text-zinc-400 text-xs space-y-1 list-disc list-inside ml-1">
-                    {plan.premium_features.map((p, i) => ( <li key={`prem-${i}`} className="hover:text-sky-300 transition-colors">{p}</li>))}
+                  <strong className="text-xs font-semibold mt-4 pt-3 border-t border-border text-destructive/80">Limitations:</strong>
+                  <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
+                    {plan.limitations.map((l, i) => ( <li key={`lim-${i}`}>{l}</li>))}
                   </ul>
                 </>
               )}
@@ -314,188 +314,139 @@ const BlueprintReviewDialog: React.FC<BlueprintReviewDialogProps> = ({
     }
   ] : [];
 
-  // Conditional rendering logic:
-  // 1. Show loading if internal API call is active (isProgressActive) OR if parent forces it (isGenerating) AND no result/error yet
-  const showLoadingUI = isProgressActive || (isGenerating && !blueprintResult && !apiError);
-  // 2. Show form if not loading and no blueprint result from parent yet
-  const showFormUI = !showLoadingUI && !blueprintResult;
-  // 3. Show results if blueprint result from parent is available and not currently loading
-  const showResultsUI = blueprintResult && !showLoadingUI;
+  // This logic correctly determines which UI to show based on props from the parent
+  const showLoadingUI = isGenerating;
+  const showResultsUI = !isGenerating && blueprintResult;
+  const showFormUI = !isGenerating && !blueprintResult;
 
+  // Modernized stepper/progress UI logic
+  const generationStepsActual = [
+    'Analysing project description',
+    'Generating project name',
+    'Evaluating market feasibility',
+    'Identifying core features',
+    'Determining technical requirements',
+    'Creating development roadmap',
+    'Generating improvement suggestions',
+  ];
+  const currentStepText = generationStepsActual[currentStep - 1] || 'Initializing...';
+  const progressPercentage = generationStepsActual.length > 0 ? (currentStep / generationStepsActual.length) * 100 : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="
-          fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-          w-full max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-7xl lg:w-[90vw]
-          mx-auto bg-zinc-950/80 backdrop-blur-3xl rounded-3xl shadow-3xl border border-zinc-700
-          hover:border-zinc-600 transition-colors duration-300 
-          p-4 sm:p-6 md:p-10 lg:p-16
-          overflow-y-auto max-h-[95vh] min-h-[60vh] space-y-6
-          custom-scrollbar
-          animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 duration-300
-          [&::-webkit-scrollbar]:w-2
-          [&::-webkit-scrollbar-track]:bg-zinc-800/50
-          [&::-webkit-scrollbar-track]:rounded-full
-          [&::-webkit-scrollbar-thumb]:bg-zinc-600
-          [&::-webkit-scrollbar-thumb]:rounded-full
-          [&::-webkit-scrollbar-thumb]:hover:bg-zinc-500
-          [&::-webkit-scrollbar-thumb]:transition-colors
-          [&::-webkit-scrollbar-thumb]:border-2
-          [&::-webkit-scrollbar-thumb]:border-zinc-800/50
-          [&::-webkit-scrollbar-thumb]:hover:border-zinc-700/50
-        "
-      >
-        <VisuallyHidden>
-          <DialogTitle>AI Blueprint Dialog</DialogTitle>
-        </VisuallyHidden>
-
-        <Button
-          onClick={handleCloseDialog}
-          className="absolute top-4 right-4 bg-zinc-800/80 hover:bg-rose-500/90 text-zinc-400 hover:text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition-all duration-200 group z-50 hover:scale-110 hover:shadow-lg hover:shadow-rose-500/30"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+      <DialogContent className="w-[95vw] max-w-6xl h-[90vh] flex flex-col bg-card text-card-foreground p-0 rounded-lg">
+        <VisuallyHidden><DialogTitle>AI Blueprint</DialogTitle></VisuallyHidden>
+        <Button onClick={handleCloseDialog} variant="ghost" size="icon" className="absolute top-3 right-3 z-50 h-8 w-8 rounded-full">
+          <X className="w-4 h-4" />
         </Button>
 
-        {/* SHOW FORM UI */}
-        {showFormUI && (
-          <>
-            <div className="text-center sm:text-left pt-10">
-              <h2 className="text-3xl font-extrabold text-white mb-2 leading-tight hover:text-indigo-300 transition-colors duration-300 cursor-default">Project Details</h2>
-              <p className="text-zinc-400 text-lg max-w-2xl mx-auto sm:mx-0">
-                Describe your AI SaaS project idea. Be concise yet comprehensive to help us generate the best blueprint for you.
-              </p>
-            </div>
-            <form onSubmit={handleSubmit(handleFormSubmitInternal)} className="flex flex-col gap-8 mt-4">
-              <div>
-                <label htmlFor="projectTitle" className="block text-sm font-semibold text-zinc-300 mb-3">Project Title</label>
-                <Input
-                  id="projectTitle"
-                  type="text"
-                  {...register('projectTitle', { required: true })}
-                  className="bg-zinc-800/60 hover:bg-zinc-800/90 border border-zinc-700 hover:border-indigo-500/70 text-zinc-100 placeholder-zinc-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 rounded-xl px-5 py-3 text-base shadow-sm hover:shadow-md transition-all duration-300"
-                />
-                {errors.projectTitle && <span className="text-red-400 hover:text-red-300 transition-colors text-sm mt-2 block animate-fade-in">Project Title is required.</span>}
-              </div>
-              <div>
-                <label htmlFor="projectDescription" className="block text-sm font-semibold text-zinc-300 mb-3">Project Description</label>
-                <Textarea
-                  id="projectDescription"
-                  {...register('projectDescription', { required: true, maxLength: MAX_CHARS })}
-                  rows={6}
-                  className="bg-zinc-800/60 hover:bg-zinc-800/90 border border-zinc-700 hover:border-indigo-500/70 text-zinc-100 placeholder-zinc-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 resize-none rounded-xl px-5 py-3 text-base shadow-sm hover:shadow-md transition-all duration-300"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <span className={`text-sm ${charCount > MAX_CHARS * 0.9 ? 'text-orange-400 hover:text-orange-300' : 'text-zinc-400 hover:text-zinc-300'} transition-colors`}>{charCount}/{MAX_CHARS} characters</span>
-                  {errors.projectDescription && errors.projectDescription.type === 'required' && <span className="text-red-400 hover:text-red-300 transition-colors text-sm animate-fade-in">Project Description is required.</span>}
-                  {errors.projectDescription && errors.projectDescription.type === 'maxLength' && <span className="text-red-400 hover:text-red-300 transition-colors text-sm animate-fade-in">Description exceeds maximum length.</span>}
+        <div className="flex-grow overflow-y-auto p-6 sm:p-8">
+          {showFormUI && (
+            <>
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0 w-12 h-12 bg-muted border rounded-lg flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">Generate SaaS Blueprint</h2>
+                  <p className="text-muted-foreground mt-1">Describe your idea to get started.</p>
                 </div>
               </div>
-              <div className="flex justify-end mt-6">
-                <Button type="submit" className="bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-bold rounded-full px-8 py-3 shadow-lg hover:shadow-[0_0_25px_theme('colors.purple.600')] transition-all duration-300 transform hover:scale-105 text-lg">
-                  Generate Blueprint
-                </Button>
-              </div>
-            </form>
-          </>
-        )}
+              <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+                <div className="space-y-2">
+                  <label htmlFor="projectTitle" className="text-sm font-medium">Project Title</label>
+                  <Input id="projectTitle" {...register('projectTitle')} placeholder="e.g., Task Management SaaS" />
+                  {errors.projectTitle && <p className="text-sm text-destructive mt-1">{errors.projectTitle.message}</p>}
+                </div>
 
-        {/* SHOW LOADING UI (driven by isProgressActive or isGenerating prop) */}
-        {showLoadingUI && (
-          <div className="flex flex-col items-center justify-center min-h-[400px] w-full text-center">
-            <h2 className="text-3xl font-extrabold text-white mb-8 tracking-wide animate-pulse">Crafting your AI SaaS blueprint...</h2>
-            {apiError && <p className="text-red-400 mb-4 text-base">{apiError}</p>}
-            <div className="w-full max-w-xl mb-10">
-              <div className="w-full bg-zinc-800/60 rounded-full h-4 overflow-hidden shadow-inner">
-                <div
-                  className="bg-gradient-to-r from-indigo-500 to-purple-500 h-4 rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${generationSteps.length > 0 ? (localStep / generationSteps.length) * 100 : 0}%` }}
-                ></div>
+                <div className="space-y-2">
+                  <label htmlFor="projectDescription" className="text-sm font-medium">Description</label>
+                  <Textarea id="projectDescription" {...register('projectDescription', { maxLength: MAX_CHARS })} placeholder="Describe your SaaS idea in detail..." rows={5} />
+                  <div className="text-xs text-muted-foreground text-right">{charCount} / {MAX_CHARS}</div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="aiModel" className="text-sm font-medium">AI Model</label>
+                  <Controller name="aiModel" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value || 'deepseek'}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="deepseek">⚡️ DeepSeek (Free)</SelectItem>
+                        <SelectItem value="gpt4">🤖 GPT-4 (Requires API Key)</SelectItem>
+                        <SelectItem value="claude">☁️ Claude (Requires API Key)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="ghost" onClick={handleCloseDialog}>Cancel</Button>
+                  <Button type="submit">✨ Generate Blueprint</Button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {showLoadingUI && (
+            <div className="flex flex-col items-center justify-center text-center py-8 px-4 min-h-[500px]">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6 border">
+                <span className="text-3xl animate-pulse">✨</span>
               </div>
-              <div className="flex justify-between mt-3 text-sm text-zinc-400 font-medium">
-                <span>Progress</span>
-                <span className="font-semibold text-white">{Math.min(100, Math.round(generationSteps.length > 0 ? (localStep / generationSteps.length) * 100 : 0))}%</span>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Generating Your SaaS Blueprint</h2>
+              <p className="text-muted-foreground mb-8">{currentStepText}</p>
+
+              <div className="w-full max-w-sm mb-8">
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-2 text-right">Step {currentStep} of {generationStepsActual.length}</div>
               </div>
+
+              <ul className="space-y-4 text-left w-full max-w-sm">
+                {generationStepsActual.map((step, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 flex-shrink-0">
+                      {index < currentStep - 1 ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <CircleDashed className={`w-5 h-5 transition-all ${index === currentStep - 1 ? 'text-primary animate-spin' : 'text-muted-foreground/30'}`} />
+                      )}
+                    </div>
+                    <span className={`transition-colors ${index < currentStep - 1 ? 'text-muted-foreground line-through' : index === currentStep - 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="w-full max-w-md mx-auto space-y-5">
-              {generationSteps.map((step, idx) => (
-                <li key={step} className="flex items-center gap-4 group cursor-default p-1 hover:bg-zinc-800/50 rounded-lg transition-colors duration-200">
-                  {idx < localStep - 1 ? ( // Step completed
-                    <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-green-600 group-hover:bg-green-500 text-white shadow-md transition-colors duration-300 transform group-hover:scale-105">
-                      <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 13l4 4L19 7' />
-                      </svg>
-                    </span>
-                  ) : idx === localStep - 1 ? ( // Step in progress
-                    <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500 group-hover:bg-indigo-400 text-white shadow-lg animate-spin-slow transition-colors duration-300 transform group-hover:scale-105">
-                      <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                        <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='2' fill='none' />
-                        <path d='M12 6v6l4 2' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
-                      </svg>
-                    </span>
-                  ) : ( // Step pending
-                    <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-zinc-700 group-hover:bg-zinc-600 text-zinc-400 shadow-sm transition-colors duration-300 transform group-hover:scale-105">
-                      <svg xmlns='http://www.w3.org/2000/svg' className='h-5 w-5' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                        <circle cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='2' fill='none' />
-                      </svg>
-                    </span>
-                  )}
-                  <span className={`text-lg transition-all duration-300 ${
-                    idx < localStep - 1
-                      ? 'text-green-400 group-hover:text-green-300 font-semibold opacity-70'
-                      : idx === localStep - 1
-                      ? 'text-indigo-300 group-hover:text-indigo-200 font-bold'
-                      : 'text-zinc-400 group-hover:text-zinc-300'
-                  }`}>
-                    {step}
-                  </span>
-                </li>
+          )}
+          
+          {showResultsUI && (
+            <div className="text-zinc-900 dark:text-zinc-100">
+              <div className="p-6 mb-8 rounded-lg bg-zinc-100 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                <h2 className="text-3xl font-bold">Review for <span className="text-indigo-600 dark:text-indigo-400">{blueprintResult.platform.name}</span></h2>
+              </div>
+              {sections.map(section => (
+                <div key={section.title} className="mb-6 p-6 rounded-lg border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-3 mb-4">
+                    {section.icon}
+                    <h3 className="text-xl font-bold">{section.title}</h3>
+                    {section.customHeader}
+                  </div>
+                  {section.content}
+                </div>
               ))}
-            </ul>
-          </div>
-        )}
-
-        {/* SHOW RESULTS UI */}
-        {showResultsUI && blueprintResult && (
-          <div className="flex flex-col w-full">
-            <div className="group flex flex-col sm:flex-row items-center gap-6 mb-10 bg-zinc-800/40 hover:bg-zinc-800/60 p-6 rounded-2xl border border-zinc-700 hover:border-indigo-500/70 shadow-xl hover:shadow-indigo-500/20 transition-all duration-300 transform hover:-translate-y-1">
-              <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-rose-500 to-fuchsia-500 flex items-center justify-center text-5xl font-bold shadow-lg group-hover:shadow-rose-400/40 group-hover:scale-105 transition-all duration-300 flex-shrink-0">
-                🚀
-              </div>
-              <div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-2 leading-tight">
-                  Review Your AI Blueprint for <span className="text-indigo-400 hover:text-purple-400 transition-colors duration-200">{blueprintResult.platform.name}</span>
-                </h2>
-                <p className="text-zinc-300 text-base sm:text-lg max-w-xl">
-                  Here's the comprehensive plan generated based on your input. Dive into the details and approve to create your project.
-                </p>
-              </div>
             </div>
-            
-            {sections.map(section => (
-              <div key={section.title} className="group mb-10 p-6 bg-zinc-800/40 hover:bg-zinc-800/60 rounded-xl border border-zinc-700 hover:border-zinc-600 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01]">
-                <div className="flex items-center gap-3 mb-5">
-                  {section.icon}
-                  <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors cursor-default">{section.title}</h3>
-                  {section.customHeader}
-                </div>
-                {section.content}
-              </div>
-            ))}
-
-            <div className="sticky left-0 right-0 bg-zinc-950/90 backdrop-blur-md p-6 flex flex-col sm:flex-row justify-end gap-4 border-t border-zinc-800 z-40 mt-auto">
-              <Button type="button" onClick={onStartOver} className="bg-zinc-700/80 hover:bg-rose-600/90 hover:text-white text-zinc-300 font-semibold rounded-full px-6 py-3 transition-all duration-300 transform hover:scale-105 text-base shadow-lg hover:shadow-rose-500/40">
-                Start Over
-              </Button>
-              <Button type="button" onClick={onEditDetails} className="bg-zinc-700/80 hover:bg-amber-500/90 hover:text-white text-zinc-300 font-semibold rounded-full px-6 py-3 transition-all duration-300 transform hover:scale-105 text-base shadow-lg hover:shadow-amber-500/40">
-                Edit Details
-              </Button>
-              <Button type="button" onClick={onApprovePlan} className="bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-bold rounded-full px-8 py-3 shadow-lg hover:shadow-[0_0_30px_theme('colors.purple.600'),0_0_15px_theme('colors.indigo.500')] transition-all duration-300 transform hover:scale-105 text-lg">
-                Approve Plan
-              </Button>
-            </div>
+          )}
+        </div>
+        {showResultsUI && (
+          <div className="flex-shrink-0 border-t border-border bg-background/80 backdrop-blur-sm p-4 flex justify-end gap-3 sticky">
+            <Button variant="ghost" onClick={onStartOver}>Start Over</Button>
+            <Button variant="secondary" onClick={onEditDetails}>Edit Details</Button>
+            <Button onClick={onApprovePlan}>Approve Plan</Button>
           </div>
         )}
       </DialogContent>

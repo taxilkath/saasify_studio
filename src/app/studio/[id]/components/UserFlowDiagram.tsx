@@ -6,6 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useParams } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 // Types
 export type CustomNodeData = {
@@ -16,7 +17,7 @@ export type CustomNodeData = {
 
 // Custom Node Component
 const CustomNode = ({ data }: { data: CustomNodeData }) => (
-  <div className="bg-zinc-900 text-white rounded-lg p-4 shadow-lg w-72">
+  <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-lg p-4 shadow-md border border-zinc-200 dark:border-zinc-700 w-72">
     <div className="text-lg font-semibold mb-2">{data.title}</div>
     <div className="text-sm text-zinc-400 mb-3">{data.description}</div>
     <ul className="space-y-1 text-sm">
@@ -44,6 +45,7 @@ const nodeTypes = { customNode: CustomNode };
 function UserFlowDiagram() {
   const params = useParams();
   const projectId = params?.id;
+  const { theme } = useTheme();
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -94,7 +96,7 @@ function UserFlowDiagram() {
         defaultEdgeOptions={{ animated: true }}
         style={{ width: '100%', height: '100%' }}
       >
-        <Background color="#333" gap={20} />
+        <Background color={theme === 'dark' ? '#333' : '#e4e4e7'} gap={20} />
         <Controls />
       </ReactFlow>
     </div>
