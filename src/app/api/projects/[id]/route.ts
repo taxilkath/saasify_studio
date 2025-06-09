@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) {
       return NextResponse.json({ success: false, error: 'Project ID is required' }, { status: 400 });
     }

@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
   Background, Controls, Handle, Position, addEdge,
   useNodesState,
   useEdgesState
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { useParams } from 'next/navigation';
 
 // Types
 export type CustomNodeData = {
@@ -40,155 +41,45 @@ const CustomNode = ({ data }: { data: CustomNodeData }) => (
 
 const nodeTypes = { customNode: CustomNode };
 
-const initialNodes = [
-  {
-    "id": "1",
-    "type": "customNode",
-    "position": { "x": 0, "y": 0 },
-    "data": {
-      "title": "Platform Entry",
-      "description": "Users discover and join UDG Central platform",
-      "checklist": [
-        { "label": "Brand Registration", "status": "done" },
-        { "label": "Creator Registration", "status": "done" },
-        { "label": "Profile Setup", "status": "in-progress" }
-      ]
-    }
-  },
-  {
-    "id": "2",
-    "type": "customNode",
-    "position": { "x": 350, "y": -100 },
-    "data": {
-      "title": "Brand Dashboard",
-      "description": "Brand control center for contest management",
-      "checklist": [
-        { "label": "Contest Creation Tools", "status": "done" },
-        { "label": "Analytics Dashboard", "status": "in-progress" },
-        { "label": "Creator Discovery", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "3",
-    "type": "customNode",
-    "position": { "x": 350, "y": 100 },
-    "data": {
-      "title": "Creator Dashboard",
-      "description": "Creator workspace for contest participation",
-      "checklist": [
-        { "label": "Contest Browser", "status": "done" },
-        { "label": "Portfolio Management", "status": "in-progress" },
-        { "label": "Submission Tools", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "4",
-    "type": "customNode",
-    "position": { "x": 700, "y": -100 },
-    "data": {
-      "title": "Contest Creation",
-      "description": "Brands set up contests with requirements and prizes",
-      "checklist": [
-        { "label": "Contest Details Form", "status": "done" },
-        { "label": "Prize Configuration", "status": "in-progress" },
-        { "label": "Publishing System", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "5",
-    "type": "customNode",
-    "position": { "x": 700, "y": 100 },
-    "data": {
-      "title": "Contest Discovery",
-      "description": "Creators find and filter relevant contests",
-      "checklist": [
-        { "label": "Search & Filters", "status": "done" },
-        { "label": "Matching Algorithm", "status": "in-progress" },
-        { "label": "Contest Recommendations", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "6",
-    "type": "customNode",
-    "position": { "x": 1050, "y": 0 },
-    "data": {
-      "title": "Active Contest Hub",
-      "description": "Central processing for live contests",
-      "checklist": [
-        { "label": "Submission Collection", "status": "done" },
-        { "label": "Content Moderation", "status": "in-progress" },
-        { "label": "Real-time Updates", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "7",
-    "type": "customNode",
-    "position": { "x": 1400, "y": -100 },
-    "data": {
-      "title": "Judging System",
-      "description": "Brand review and winner selection process",
-      "checklist": [
-        { "label": "Review Interface", "status": "done" },
-        { "label": "Scoring System", "status": "in-progress" },
-        { "label": "Winner Selection", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "8",
-    "type": "customNode",
-    "position": { "x": 1400, "y": 100 },
-    "data": {
-      "title": "Rewards & Recognition",
-      "description": "Prize distribution and creator recognition",
-      "checklist": [
-        { "label": "Payment Processing", "status": "done" },
-        { "label": "Winner Announcements", "status": "in-progress" },
-        { "label": "Portfolio Updates", "status": "pending" }
-      ]
-    }
-  },
-  {
-    "id": "9",
-    "type": "customNode",
-    "position": { "x": 1750, "y": 0 },
-    "data": {
-      "title": "Analytics & Insights",
-      "description": "Performance tracking and platform optimization",
-      "checklist": [
-        { "label": "Contest Analytics", "status": "done" },
-        { "label": "Creator Metrics", "status": "in-progress" },
-        { "label": "ROI Tracking", "status": "pending" }
-      ]
-    }
-  }
-];
-const initialEdges = [
-  { "id": "e1-2", "source": "1", "target": "2", "animated": true },
-  { "id": "e1-3", "source": "1", "target": "3", "animated": true },
-  { "id": "e2-4", "source": "2", "target": "4", "animated": true },
-  { "id": "e3-5", "source": "3", "target": "5", "animated": true },
-  { "id": "e4-6", "source": "4", "target": "6", "animated": true },
-  { "id": "e5-6", "source": "5", "target": "6", "animated": true },
-  { "id": "e6-7", "source": "6", "target": "7", "animated": true },
-  { "id": "e6-8", "source": "6", "target": "8", "animated": true },
-  { "id": "e7-9", "source": "7", "target": "9", "animated": true },
-  { "id": "e8-9", "source": "8", "target": "9", "animated": true }
-]
-
 function UserFlowDiagram() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const params = useParams();
+  const projectId = params?.id;
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const onConnect = useCallback(
     (params: any) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
     [setEdges]
   );
+
+  useEffect(() => {
+    async function fetchBlueprint() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/projects/${projectId}`);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'Failed to fetch project');
+        const blueprint = json.data?.blueprint;
+        const diagram = blueprint?.content?.user_flow_diagram;
+        setNodes(diagram?.initialNodes || []);
+        setEdges(diagram?.initialEdges || []);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+        setNodes([]);
+        setEdges([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (projectId) fetchBlueprint();
+  }, [projectId, setNodes, setEdges]);
+
+  if (loading) return <div>Loading user flow...</div>;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
     <div style={{ width: '100%', height: '60vh', minWidth: 0 }}>

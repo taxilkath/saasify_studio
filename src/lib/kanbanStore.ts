@@ -21,6 +21,7 @@ type KanbanState = {
   tickets: Record<string, Ticket>;
   moveTicket: (ticketId: string, toColumnId: string) => void;
   addTicket: (columnId: string, ticket: Ticket) => void;
+  initializeBoard: (columns: Column[], tickets: Record<string, Ticket>) => void;
 };
 
 export const useKanbanStore = create<KanbanState>((set) => ({
@@ -69,4 +70,5 @@ export const useKanbanStore = create<KanbanState>((set) => ({
         },
       };
     }),
+  initializeBoard: (columns, tickets) => set(() => ({ columns, tickets })),
 }));

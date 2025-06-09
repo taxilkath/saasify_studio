@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Plus, BarChart2, Flower, ListTodo, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs'; // Import useUser hook
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,8 @@ function mapToBlueprintData(raw: any): BlueprintData {
 }
 
 export default function DashboardPage() {
+  const { user } = useUser(); // Get the user object from Clerk
+
   const {
     projects,
     isDialogOpen,
@@ -369,7 +372,10 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 text-zinc-100 p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow mb-1">AI Studio</h1>
+          {/* Greet the user! */}
+          <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow mb-1">
+            Welcome back, {user?.firstName || 'Creator'}!
+          </h1>
           <p className="text-zinc-400 text-base mt-1">Manage and create your AI projects here</p>
         </div>
         <Button
@@ -470,17 +476,8 @@ export default function DashboardPage() {
           }
         }}
         projectName={projectToDelete?.name || ''}
-        onConfirm={handleConfirmDelete} // Corrected: was handleConfirmDfelete
+        onConfirm={handleConfirmDelete}
       />
-      {/* Optional: Global "Deleting..." overlay if you still want it,
-          though card-specific animation might be primary feedback now.
-          The `isDeleting` state could be used for disabling UI elements globally if needed.
-      */}
-      {/* {isDeleting && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-zinc-900 text-white px-6 py-4 rounded-xl shadow-lg">Processing...</div>
-        </div>
-      )} */}
     </div>
   );
 }

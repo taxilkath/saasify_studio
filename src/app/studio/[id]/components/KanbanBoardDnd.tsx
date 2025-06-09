@@ -15,7 +15,8 @@ import { useDroppable } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { DragOverlay } from '@dnd-kit/core';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 
 type KanbanColumnProps = {
   id: string;
@@ -238,6 +239,46 @@ function KanbanBoardDnd() {
       },
     })
   );
+
+  const initializeBoard = useKanbanStore((state) => state.initializeBoard);
+
+  const params = useParams();
+  const projectId = params?.id;
+
+  useEffect(() => {
+    async function fetchKanban() {
+      if (!projectId) return;
+      const res = await fetch(`/api/projects/${projectId}`);
+      const json = await res.json();
+      if (!json.success) return;
+      const kanban = json.data?.blueprint?.content?.kanban_tickets;
+      if (!kanban) return;
+
+      // Map backend columns and tickets to frontend format
+      const columns = Object.entries(kanban.columns).map(([key, col]: [string, any]) => ({
+        id: key,
+        title: col.title,
+        ticketIds: (col.tickets || []).map((t: any) => t.id),
+      }));
+
+      const tickets: Record<string, Ticket> = {};
+      Object.values(kanban.columns).forEach((col: any) => {
+        (col.tickets || []).forEach((t: any) => {
+          tickets[t.id] = {
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            tags: [], // or map tags if present
+            priority: t.priority || 'low',
+            assignee: t.assignee || '',
+          };
+        });
+      });
+
+      initializeBoard(columns, tickets);
+    }
+    fetchKanban();
+  }, [projectId, initializeBoard]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
