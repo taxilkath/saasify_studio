@@ -23,7 +23,6 @@ type FormData = z.infer<typeof formSchema>;
 interface GenerateBlueprintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // This function now should handle the API logic and return a promise
   onFormSubmit: (data: FormData) => Promise<void>; 
 }
 
@@ -43,52 +42,45 @@ export function GenerateBlueprintDialog({ open, onOpenChange, onFormSubmit }: Ge
     defaultValues: { projectTitle: '', projectDescription: '', aiModel: 'deepseek' },
   });
 
-  // --- Local State for Loading and Animation ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localStep, setLocalStep] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const charCount = watch('projectDescription')?.length || 0;
 
-  // Effect to run the animation when `isSubmitting` is true
   useEffect(() => {
     if (isSubmitting) {
-      setLocalStep(1); // Start the animation
+      setLocalStep(1); 
       intervalRef.current = setInterval(() => {
         setLocalStep((prev) => (prev >= generationSteps.length ? 1 : prev + 1));
-      }, 1200); // Animation speed: 1.2s per step
+      }, 1200);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-    // Cleanup function to clear the interval
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isSubmitting]);
 
-  // Internal submit handler to control the loading state
   const handleInternalSubmit = async (data: FormData) => {
-    setIsSubmitting(true); // <--- This is the key change! Show loading screen immediately.
+    setIsSubmitting(true);
     try {
-      await onFormSubmit(data); // Call the async function from the parent
+      await onFormSubmit(data); 
     } catch (error) {
       console.error("Submission failed:", error);
-      // Let the parent component handle error alerts
     } finally {
-      setIsSubmitting(false); // Stop loading animation when done (or if it fails)
+      // Don't set isSubmitting to false here. The parent component will close this dialog on success.
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isSubmitting) { // Prevent closing the dialog while loading
+      if (!isSubmitting) { 
         onOpenChange(isOpen);
       }
     }}>
       <DialogContent className="sm:max-w-2xl bg-card text-card-foreground">
         
-        {/* ---- CONDITIONAL UI RENDER ---- */}
-        {/* If NOT submitting, show the form */}
         {!isSubmitting ? (
           <>
             <DialogHeader>
@@ -102,7 +94,6 @@ export function GenerateBlueprintDialog({ open, onOpenChange, onFormSubmit }: Ge
                 </div>
               </div>
             </DialogHeader>
-            {/* The form now calls our internal handler */}
             <form onSubmit={handleSubmit(handleInternalSubmit)} className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Project Title</label>
@@ -130,8 +121,11 @@ export function GenerateBlueprintDialog({ open, onOpenChange, onFormSubmit }: Ge
             </form>
           </>
         ) : (
-          // If `isSubmitting` is true, show the progress animation
           <div className="flex flex-col items-center justify-center min-h-[50vh] w-full text-center p-8">
+              {/* --- THIS IS THE FIX --- */}
+              {/* Add a visually hidden title for screen readers */}
+              <DialogTitle className="sr-only">Generating Your SaaS Blueprint</DialogTitle>
+              
               <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-6 border-4 border-zinc-700">
                 <span className="text-4xl">✨</span>
               </div>

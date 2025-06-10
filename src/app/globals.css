@@ -56,6 +56,17 @@ html {
 .animate-fadeOutShrink {
   animation: fadeOutShrink 0.5s ease-out forwards;
 }
+
+/* ... existing styles ... */
+
+@keyframes aurora {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 /* Your custom global styles */
 @layer utilities {
   @keyframes fadeInUp {

@@ -4,66 +4,58 @@ import { useState, useEffect } from 'react';
 import { useProjectStore } from '@/lib/projectStore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, BarChart2, Flower, ListTodo, Zap } from 'lucide-react';
+// Added DraftingCompass and PlusCircle for the new empty state
+import { Plus, BarChart2, Flower, ListTodo, Zap, DraftingCompass, PlusCircle } from 'lucide-react';
 import { GenerateBlueprintDialog } from '@/components/GenerateBlueprintDialog';
-import { ViewBlueprintDialog } from '@/components/ViewBlueprintDialog';
-import type { BlueprintData } from '@/types/blueprint';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { useUser } from '@clerk/nextjs';
+// Added Framer Motion for animations
+import { motion } from 'framer-motion';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
-  const { projects, fetchProjects, isGenerating, setIsGenerating } = useProjectStore();
+  const { projects, fetchProjects } = useProjectStore();
 
   const [isCreateOpen, setCreateOpen] = useState(false);
-  const [isViewOpen, setViewOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeBlueprint, setActiveBlueprint] = useState<BlueprintData | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
-  const DELETE_ANIMATION_DURATION = 500; // Matches the CSS animation duration
+  const DELETE_ANIMATION_DURATION = 500;
 
   useEffect(() => { fetchProjects() }, [fetchProjects]);
 
-  const handleViewBlueprint = (project: any) => {
-    if (project?.blueprint?.content) {
-      setActiveBlueprint(project.blueprint.content);
-      setIsLoading(false);
-      setViewOpen(true);
-    } else {
-      alert("No blueprint data available for this project.");
+  const handleGoToPage = (projectId: string, tab?: string) => {
+    let url = `/studio/${projectId}`;
+    if (tab) {
+      url += `?tab=${tab}`;
     }
+    router.push(url);
   };
 
   const handleFormSubmit = async (data: any) => {
-    setCreateOpen(false);
-    setViewOpen(true);
-    setIsLoading(true);
-    setActiveBlueprint(null);
-    setIsGenerating(true);
     try {
-      console.log(isGenerating);
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       const result = await response.json();
-      if (!result.success) throw new Error(result.error);
-
-      setActiveBlueprint(result.data.blueprint.content);
+      if (!result.success) {
+        throw new Error(result.error || 'API call failed');
+      }
+      
+      const newProjectId = result.data.project._id;
+      setCreateOpen(false);
       fetchProjects();
+      router.push(`/studio/${newProjectId}`);
 
     } catch (error) {
       console.error("Failed to generate blueprint", error);
-      setViewOpen(false);
-    } finally {
-      setIsGenerating(false); // This stops the animation
-      setIsLoading(false);
+      alert('Failed to generate blueprint. Please try again.');
+      setCreateOpen(false);
     }
   };
 
@@ -74,29 +66,24 @@ export default function DashboardPage() {
 
   const handleConfirmDelete = async () => {
     if (!projectToDelete) return;
-
     const id = projectToDelete._id || projectToDelete.id;
-    
-    // 1. Trigger the animation by setting the ID
-    setDeletingProjectId(id); 
+    setDeletingProjectId(id);
 
     try {
       const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
       const data = await res.json();
 
-      // 2. Wait for the animation to finish before removing the item from the list
       setTimeout(() => {
         if (data.success) {
           fetchProjects();
         } else {
           alert(data.error || 'Failed to delete project.');
-          setDeletingProjectId(null); // Reset animation if the delete failed
+          setDeletingProjectId(null);
         }
         setIsDeleting(false);
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
       }, DELETE_ANIMATION_DURATION);
-
     } catch (err) {
       setTimeout(() => {
         alert('An error occurred while trying to delete the project.');
@@ -106,21 +93,6 @@ export default function DashboardPage() {
         setDeletingProjectId(null);
       }, 500);
     }
-  };
-
-  const handleGoToOverview = (project: any) => {
-    const id = project._id || project.id;
-    router.push(`/studio/${id}?tab=overview`);
-  };
-
-  const handleGoToUserFlow = (project: any) => {
-    const id = project._id || project.id;
-    router.push(`/studio/${id}?tab=userflow`);
-  };
-
-  const handleGoToKanban = (project: any) => {
-    const id = project._id || project.id;
-    router.push(`/studio/${id}?tab=kanban`);
   };
 
   return (
@@ -138,58 +110,75 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {projects.map((project: any) => {
-          const currentProjectId = project._id || project.id;
-          return (
-            <div
-              key={currentProjectId}
-              className={`
-                cursor-pointer group flex flex-col gap-4 rounded-lg border text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1
-                bg-zinc-900/80 ...
-                ${deletingProjectId === currentProjectId ? 'animate-fadeOutShrink' : 'opacity-100'}
-              `}
-              onClick={() => handleViewBlueprint(project)}
-            >
-              <div className="h-24 w-full bg-gradient-to-tr from-red-400 to-yellow-400 rounded-lg flex items-center justify-center">
-                <span className="text-4xl">😎</span>
+      {/* --- CONDITIONAL RENDERING FOR EMPTY STATE --- */}
+      {projects.length === 0 ? (
+        <motion.div
+          className="flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-xl p-12 min-h-[400px] bg-muted/20"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
+            <DraftingCompass className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">Your Dashboard is Ready</h3>
+          <p className="text-muted-foreground mt-2 max-w-md">
+            You haven't generated any blueprints yet. Click the button below to bring your first idea to life.
+          </p>
+          <Button onClick={() => setCreateOpen(true)} className="mt-6" size="lg">
+            <PlusCircle className="w-5 h-5 mr-2" />
+            Generate Your First Blueprint
+          </Button>
+        </motion.div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {projects.map((project: any) => {
+            const currentProjectId = project._id || project.id;
+            return (
+              <div
+                key={currentProjectId}
+                className={`
+                  cursor-pointer group flex flex-col gap-4 rounded-lg border text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1
+                  bg-zinc-900/80
+                  ${deletingProjectId === currentProjectId ? 'animate-fadeOutShrink' : 'opacity-100'}
+                `}
+                onClick={() => handleGoToPage(currentProjectId, 'blueprint')}
+              >
+                <div className="h-24 w-full bg-gradient-to-tr from-red-400 to-yellow-400 rounded-lg flex items-center justify-center">
+                  <span className="text-4xl">😎</span>
+                </div>
+                <h2 className="text-lg font-bold text-card-foreground group-hover:text-primary">
+                  {project.name}
+                </h2>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {project.description}
+                </p>
+                <div className="flex gap-4 mt-auto">
+                  <button type="button" onClick={e => { e.stopPropagation(); handleGoToPage(currentProjectId, 'overview'); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
+                    <BarChart2 className="w-4 h-4" /> Analytics
+                  </button>
+                  <button type="button" onClick={e => { e.stopPropagation(); handleGoToPage(currentProjectId, 'user-flow'); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
+                    <Flower className="w-4 h-4" /> Flow
+                  </button>
+                  <button type="button" onClick={e => { e.stopPropagation(); handleGoToPage(currentProjectId, 'tickets-board'); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
+                    <ListTodo className="w-4 h-4" /> Tasks
+                  </button>
+                  <button type="button" onClick={e => { e.stopPropagation(); handleDeleteClick(project); }} disabled={isDeleting && deletingProjectId === currentProjectId} className="flex items-center gap-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 text-xs font-medium ml-auto">
+                    <Zap className="w-4 h-4" /> Delete
+                  </button>
+                </div>
               </div>
-              <h2 className="text-lg font-bold text-card-foreground group-hover:text-primary">
-                {project.name}
-              </h2>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {project.description}
-              </p>
-              <div className="flex gap-4 mt-auto">
-                <button type="button" onClick={e => { e.stopPropagation(); handleGoToOverview(project); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
-                  <BarChart2 className="w-4 h-4" /> Analytics
-                </button>
-                <button type="button" onClick={e => { e.stopPropagation(); handleGoToUserFlow(project); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
-                  <Flower className="w-4 h-4" /> Flow
-                </button>
-                <button type="button" onClick={e => { e.stopPropagation(); handleGoToKanban(project); }} className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium">
-                  <ListTodo className="w-4 h-4" /> Tasks
-                </button>
-                <button type="button" onClick={e => { e.stopPropagation(); handleDeleteClick(project); }} disabled={isDeleting && deletingProjectId === currentProjectId} className="flex items-center gap-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 text-xs font-medium ml-auto">
-                  <Zap className="w-4 h-4" /> Delete
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <GenerateBlueprintDialog
         open={isCreateOpen}
         onOpenChange={setCreateOpen}
         onFormSubmit={handleFormSubmit}
       />
-      <ViewBlueprintDialog
-        open={isViewOpen}
-        onOpenChange={setViewOpen}
-        isLoading={isLoading}
-        blueprint={activeBlueprint}
-      />
+      
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={open => {
