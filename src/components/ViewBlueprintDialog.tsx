@@ -209,10 +209,10 @@ export function ViewBlueprintDialog({ open, onOpenChange, blueprint, isLoading }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-7xl h-[90vh] flex flex-col bg-card text-card-foreground p-0 rounded-lg">
+      <DialogContent className="w-[98vw] max-w-none md:max-w-6xl lg:max-w-7xl max-h-[90vh] flex flex-col bg-card text-card-foreground p-0 rounded-lg">
         <DialogHeader className="p-6 border-b flex-shrink-0">
           <DialogTitle className="text-2xl font-bold">
-            {isLoading ? 'Generating...' : `Blueprint: ${blueprint?.platform.name}`}
+            {isLoading ? 'Loading Blueprint...' : `Blueprint: ${blueprint?.platform.name}`}
           </DialogTitle>
         </DialogHeader>
 

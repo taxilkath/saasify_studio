@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
     unoptimized: true,
   },
+  devIndicators: false
 };
 
 export default nextConfig;

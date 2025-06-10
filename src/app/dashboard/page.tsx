@@ -14,7 +14,7 @@ import { useUser } from '@clerk/nextjs';
 export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
-  const { projects, fetchProjects } = useProjectStore();
+  const { projects, fetchProjects, isGenerating, setIsGenerating } = useProjectStore();
 
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isViewOpen, setViewOpen] = useState(false);
@@ -24,16 +24,18 @@ export default function DashboardPage() {
   const [projectToDelete, setProjectToDelete] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
-  
+
+  const DELETE_ANIMATION_DURATION = 500; // Matches the CSS animation duration
+
   useEffect(() => { fetchProjects() }, [fetchProjects]);
 
   const handleViewBlueprint = (project: any) => {
     if (project?.blueprint?.content) {
-        setActiveBlueprint(project.blueprint.content);
-        setIsLoading(false);
-        setViewOpen(true);
+      setActiveBlueprint(project.blueprint.content);
+      setIsLoading(false);
+      setViewOpen(true);
     } else {
-        alert("No blueprint data available for this project.");
+      alert("No blueprint data available for this project.");
     }
   };
 
@@ -42,8 +44,9 @@ export default function DashboardPage() {
     setViewOpen(true);
     setIsLoading(true);
     setActiveBlueprint(null);
-
+    setIsGenerating(true);
     try {
+      console.log(isGenerating);
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,7 +54,7 @@ export default function DashboardPage() {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
-      
+
       setActiveBlueprint(result.data.blueprint.content);
       fetchProjects();
 
@@ -59,6 +62,7 @@ export default function DashboardPage() {
       console.error("Failed to generate blueprint", error);
       setViewOpen(false);
     } finally {
+      setIsGenerating(false); // This stops the animation
       setIsLoading(false);
     }
   };
@@ -72,32 +76,26 @@ export default function DashboardPage() {
     if (!projectToDelete) return;
 
     const id = projectToDelete._id || projectToDelete.id;
-    if (!id) {
-      alert("Project ID is missing.");
-      return;
-    }
-
-    setIsDeleting(true);
-    setDeletingProjectId(id);
+    
+    // 1. Trigger the animation by setting the ID
+    setDeletingProjectId(id); 
 
     try {
       const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
       const data = await res.json();
 
+      // 2. Wait for the animation to finish before removing the item from the list
       setTimeout(() => {
         if (data.success) {
           fetchProjects();
         } else {
-          alert(data.error || 'Failed to delete project from server.');
-          setDeletingProjectId(null);
+          alert(data.error || 'Failed to delete project.');
+          setDeletingProjectId(null); // Reset animation if the delete failed
         }
         setIsDeleting(false);
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
-        if (data.success) {
-          setDeletingProjectId(null);
-        }
-      }, 500);
+      }, DELETE_ANIMATION_DURATION);
 
     } catch (err) {
       setTimeout(() => {
@@ -139,15 +137,19 @@ export default function DashboardPage() {
           Generate SaaS Blueprint
         </Button>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {projects.map((project: any) => {
           const currentProjectId = project._id || project.id;
           return (
             <div
               key={currentProjectId}
+              className={`
+                cursor-pointer group flex flex-col gap-4 rounded-lg border text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1
+                bg-zinc-900/80 ...
+                ${deletingProjectId === currentProjectId ? 'animate-fadeOutShrink' : 'opacity-100'}
+              `}
               onClick={() => handleViewBlueprint(project)}
-              className="cursor-pointer group flex flex-col gap-4 rounded-lg border bg-card text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1"
             >
               <div className="h-24 w-full bg-gradient-to-tr from-red-400 to-yellow-400 rounded-lg flex items-center justify-center">
                 <span className="text-4xl">😎</span>

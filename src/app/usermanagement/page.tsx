@@ -7,6 +7,7 @@ export default function UserManagementPage() {
   const { user } = useUser();
 
   // We'll assume the user is a "pro" user for this example.
+  // In a real app, you would check this against your database or user metadata.
   const isProUser = true; 
 
   return (
@@ -30,24 +31,25 @@ export default function UserManagementPage() {
         </p>
       </div>
 
+      <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/50 p-0.5 shadow-2xl shadow-zinc-950/50">
         <UserProfile
-          path="/users"
+          path="/user-management"
           routing="path"
           appearance={{
-            baseTheme: undefined,
+            baseTheme: undefined, // Let our custom styles take over
             variables: {
-              colorPrimary: '#6366f1',
-              colorText: '#e2e8f0',
-              colorTextSecondary: '#94a3b8',
-              colorBackground: '#18181b',
-              colorInputBackground: '#27272a',
+              colorPrimary: '#6366f1', // Indigo
+              colorText: '#e2e8f0', // Slate 200
+              colorTextSecondary: '#94a3b8', // Slate 400
+              colorBackground: '#18181b', // Zinc 900
+              colorInputBackground: '#27272a', // Zinc 800
               colorInputText: '#e2e8f0',
             },
             elements: {
               rootBox: 'w-full',
               card: 'w-full shadow-none bg-transparent',
               pageScrollBox: 'p-0',
-              navbar: 'hidden',
+              navbar: 'hidden', // Hide the default Clerk navbar inside the profile
               headerTitle: 'text-2xl font-bold text-white',
               headerSubtitle: 'text-base text-muted-foreground',
               profileSection: 'flow-root p-6 transition-all rounded-lg border border-zinc-800 hover:bg-zinc-800/50',
@@ -63,6 +65,7 @@ export default function UserManagementPage() {
             },
           }}
         />
+      </div>
     </div>
   );
-}
+} 
