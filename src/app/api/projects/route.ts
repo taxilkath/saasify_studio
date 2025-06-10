@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Project from '@/models/Project';
-import Blueprint from '@/models/Blueprint';
+import prisma from '@/lib/prisma';
 import { getAuth } from '@clerk/nextjs/server';
-// --- ADD IMPORTS FOR THE NEW MODELS ---
-import Kanban from '@/models/Kanban';
-import MemoryBank from '@/models/MemoryBank';
-import UserFlow from '@/models/UserFlow';
 
 // OpenAI configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -91,11 +85,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-    await dbConnect();
-    const projects = await Project.find({ userId: userId })
-      .populate('blueprint')
-      .sort({ createdAt: -1 })
-      .lean();
+
+    const projects = await prisma.project.findMany({
+      where: { userId: userId },
+      include: { blueprint: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
     return NextResponse.json({ success: true, data: projects }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: 'Failed to fetch projects' }, { status: 500 });
@@ -626,66 +622,47 @@ json :i will give idea to llm and in return i need thistype of json{
 
     // Call OpenAI API and get parsed JSON
     const aiResponseJSON = await callOpenAI(prompt);
-
+    console.log(aiResponseJSON);
     console.log("got json from openai ");
     if (!aiResponseJSON) {
       throw new Error('No response received from AI model');
     }
 
-    await dbConnect();
-
-    // 1. Save the full blueprint as the source of truth
-    const blueprint = new Blueprint({
-      title: `${projectTitle} Blueprint`,
-      content: aiResponseJSON,
+    await prisma.project.create({
+      data: {
+        name: projectTitle,
+        description: projectDescription,
+        userId: userId,
+        blueprint: {
+          create: {
+            title: `${projectTitle} Blueprint`,
+            content: aiResponseJSON,
+          },
+        },
+        userFlow: {
+          create: {
+            nodes: aiResponseJSON.user_flow_diagram?.initialNodes || [],
+            edges: aiResponseJSON.user_flow_diagram?.initialEdges || [],
+          },
+        },
+        kanban: {
+          create: {
+            columns: aiResponseJSON.kanban_tickets?.columns || {},
+          },
+        },
+        memoryBank: {
+          create: {},
+        },
+      },
+      include: {
+        blueprint: true,
+      },
     });
-    const savedBlueprint = await blueprint.save();
-
-    // 2. Create the main Project document
-    const project = new Project({
-      name: projectTitle,
-      description: projectDescription,
-      userId: userId,
-      blueprint: savedBlueprint._id,
-    });
-    const savedProject = await project.save();
-    const projectId = savedProject._id;
-
-    // 3. Create and link the separate documents
-    const userFlowData = aiResponseJSON.user_flow_diagram || {};
-    const kanbanData = aiResponseJSON.kanban_tickets || {};
-
-    const newUserFlow = new UserFlow({
-      projectId,
-      nodes: userFlowData.initialNodes || [],
-      edges: userFlowData.initialEdges || [],
-    });
-    const savedUserFlow = await newUserFlow.save();
-
-    const newKanban = new Kanban({
-      projectId,
-      columns: kanbanData.columns || {},
-      tickets: {}, // You might want to process tickets here into a better format
-    });
-    const savedKanban = await newKanban.save();
-
-    const newMemoryBank = new MemoryBank({ projectId });
-    const savedMemoryBank = await newMemoryBank.save();
-
-    // 4. Update the main project with references to the new documents
-    savedProject.userFlow = savedUserFlow._id;
-    savedProject.kanban = savedKanban._id;
-    savedProject.memoryBank = savedMemoryBank._id;
-    await savedProject.save();
-
-    // 5. Populate and return the final project data
-    const finalProject = await Project.findById(projectId).populate('blueprint');
 
     return NextResponse.json({
       success: true,
       data: {
-        project: finalProject,
-        blueprint: aiResponseJSON
+        project: aiResponseJSON
       }
     }, { status: 201 });
 
