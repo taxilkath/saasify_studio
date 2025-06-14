@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Studio",
-  description: "Generate SaaS Blueprints with AI",
+  title: "SaaSify Studio",
+  description: "The AI-Powered Platform for Building and Launching SaaS Applications.",
 };
 
 export default function RootLayout({

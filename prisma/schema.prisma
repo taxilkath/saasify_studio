@@ -1,0 +1,75 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  // Using the default output path is often easier:
+  // output   = "@prisma/client" 
+  // If you keep the custom path, your imports will be from "@/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Replaces src/models/Project.ts
+model Project {
+  id          String      @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  blueprint   Blueprint?
+  userFlow    UserFlow?
+  kanban      Kanban?
+  memoryBank  MemoryBank?
+}
+
+// Replaces src/models/Blueprint.ts
+model Blueprint {
+  id        String   @id @default(cuid())
+  title     String
+  content   Json? // Use JSON type for flexible AI output
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// Replaces src/models/UserFlow.ts
+model UserFlow {
+  id        String   @id @default(cuid())
+  nodes     Json?
+  edges     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// Replaces src/models/Kanban.ts
+model Kanban {
+  id        String   @id @default(cuid())
+  columns   Json?
+  tickets   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// Replaces src/models/MemoryBank.ts
+model MemoryBank {
+  id        String   @id @default(cuid())
+  content   String?  @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}

@@ -1,30 +1,34 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import type { BlueprintData } from '@/types/blueprint';
 
+// The 'isLoading' prop is removed for simpler, more reliable state management.
 interface ViewBlueprintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   blueprint: BlueprintData | null;
-  isLoading: boolean;
 }
 
-export function ViewBlueprintDialog({ open, onOpenChange, blueprint, isLoading }: ViewBlueprintDialogProps) {
+export function ViewBlueprintDialog({ open, onOpenChange, blueprint }: ViewBlueprintDialogProps) {
+  // The loading state is now derived directly from the blueprint prop.
+  // If there's no blueprint, we are loading.
+  const isLoading = !blueprint;
+
   const sections = blueprint ? [
-      {
-          title: "Platform Overview",
-          icon: <span className="text-3xl">🌌</span>,
-          content: (
-              <p className="text-muted-foreground">
-                  <strong className="block mb-1 text-primary">{blueprint.platform.tagline}</strong>
-                  {blueprint.platform.description}
-              </p>
-          )
-      },
+    {
+        title: "Platform Overview",
+        icon: <span className="text-3xl">🌌</span>,
+        content: (
+            <p className="text-muted-foreground">
+                <strong className="block mb-1 text-primary">{blueprint.platform.tagline}</strong>
+                {blueprint.platform.description}
+            </p>
+        )
+    },
     {
       title: "Market Feasibility Analysis",
       icon: <span className="text-3xl text-teal-400 group-hover:text-teal-300 group-hover:scale-110 transition-all duration-200">📊</span>,
@@ -217,10 +221,14 @@ export function ViewBlueprintDialog({ open, onOpenChange, blueprint, isLoading }
         </DialogHeader>
 
         <div className="flex-grow overflow-y-auto p-6 space-y-6">
-          {isLoading && <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary"/></div>}
+          {isLoading && (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+            </div>
+          )}
           
-          {!isLoading && blueprint && sections.map(section => (
-            <div key={section.title} className="rounded-lg border bg-background p-6">
+          {!isLoading && sections.map((section, index) => (
+            <div key={index} className="rounded-lg border bg-background p-6">
               <div className="flex items-center gap-3 mb-4">
                 {section.icon}
                 <h3 className="text-xl font-bold text-foreground">{section.title}</h3>

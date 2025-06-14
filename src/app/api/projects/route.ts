@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import Project from '@/models/Project';
-import Blueprint from '@/models/Blueprint';
+import prisma from '@/lib/prisma';
+import { getAuth } from '@clerk/nextjs/server';
 
 // OpenAI configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -13,11 +12,11 @@ function extractJSON(text: string) {
     // Find the first { and last } to extract JSON
     const startIndex = text.indexOf('{');
     const lastIndex = text.lastIndexOf('}');
-    
+
     if (startIndex === -1 || lastIndex === -1 || startIndex >= lastIndex) {
       throw new Error('No valid JSON found in response');
     }
-    
+
     const jsonStr = text.substring(startIndex, lastIndex + 1);
     return JSON.parse(jsonStr);
   } catch (error) {
@@ -69,10 +68,10 @@ async function callOpenAI(prompt: string) {
     console.log('OpenAI response received successfully');
 
     const aiResponseText = data.choices[0].message.content;
-    
+
     // Extract and parse JSON from the response
     const parsedJSON = extractJSON(aiResponseText);
-    
+
     return parsedJSON;
   } catch (error) {
     console.error('OpenAI API call failed:', error);
@@ -80,40 +79,42 @@ async function callOpenAI(prompt: string) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    await dbConnect();
-    const projects = await Project.find()
-      .populate('blueprint')
-      .sort({ createdAt: -1 })
-      .lean(); // Use lean() for better performance when you don't need Mongoose document methods
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: projects,
-      count: projects.length
-    }, { status: 200 });
+    const projects = await prisma.project.findMany({
+      where: { userId: userId },
+      include: { blueprint: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json({ success: true, data: projects }, { status: 200 });
   } catch (error: any) {
-    console.error('GET /api/projects error:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Failed to fetch projects'
-    }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Validate request body
+    const { userId } = getAuth(req);
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const body = await req.json();
     const { projectTitle, projectDescription } = body;
-    
+
     if (!projectTitle || !projectDescription) {
       return NextResponse.json({
         success: false,
         error: 'Project title and description are required'
       }, { status: 400 });
     }
+
     // Create enhanced prompt for ChatGPT
     const prompt = `Generate a comprehensive, detailed json as given for this idea: Project Description:** ${projectDescription}
 
@@ -621,48 +622,56 @@ json :i will give idea to llm and in return i need thistype of json{
 
     // Call OpenAI API and get parsed JSON
     const aiResponseJSON = await callOpenAI(prompt);
-    
+    console.log(aiResponseJSON);
     console.log("got json from openai ");
     if (!aiResponseJSON) {
       throw new Error('No response received from AI model');
     }
 
-    // Connect to database
-    await dbConnect();
-
-    // Create new blueprint with parsed JSON object
-    const blueprint = new Blueprint({
-      title: `${projectTitle} Blueprint`,
-      content: aiResponseJSON, // Save as JSON object, not string
-      generatedAt: new Date(),
+    await prisma.project.create({
+      data: {
+        name: projectTitle,
+        description: projectDescription,
+        userId: userId,
+        blueprint: {
+          create: {
+            title: `${projectTitle} Blueprint`,
+            content: aiResponseJSON,
+          },
+        },
+        userFlow: {
+          create: {
+            nodes: aiResponseJSON.user_flow_diagram?.initialNodes || [],
+            edges: aiResponseJSON.user_flow_diagram?.initialEdges || [],
+          },
+        },
+        kanban: {
+          create: {
+            columns: aiResponseJSON.kanban_tickets?.columns || {},
+          },
+        },
+        memoryBank: {
+          create: {},
+        },
+      },
+      include: {
+        blueprint: true,
+      },
     });
-
-    const savedBlueprint = await blueprint.save();
-
-    // Create new project
-    const project = new Project({
-      name: projectTitle,
-      description: projectDescription,
-      blueprint: savedBlueprint._id,
-    });
-
-    const savedProject = await project.save();
-
-    // Populate the blueprint in the response
-    await savedProject.populate('blueprint');
 
     return NextResponse.json({
       success: true,
       data: {
-        project: savedProject,
-        blueprint: aiResponseJSON // Return the parsed JSON
+        project: aiResponseJSON
       }
     }, { status: 201 });
 
   } catch (error: any) {
+    console.error('POST /api/projects error:', error);
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to generate project blueprint'
     }, { status: 500 });
   }
 }
+
