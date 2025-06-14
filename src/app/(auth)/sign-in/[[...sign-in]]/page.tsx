@@ -3,7 +3,7 @@
 import { SignIn } from "@clerk/nextjs";
 import Image from 'next/image';
 import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { Rocket, Bot, GitMerge, LayoutGrid } from 'lucide-react';
+import { Bot, GitMerge, LayoutGrid } from 'lucide-react';
 import React from "react";
 
 // Array of features to display
@@ -26,11 +26,11 @@ const features = [
 ];
 
 export default function Page() {
-  let mouseX = useMotionValue(0);
-  let mouseY = useMotionValue(0);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
   function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
-    let { left, top } = currentTarget.getBoundingClientRect();
+    const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
   }
@@ -69,7 +69,7 @@ export default function Page() {
             </p>
           </div>
           <div className="space-y-6 z-10 w-full max-w-sm">
-            {features.map((feature, i) => (
+            {features.map((feature) => (
               <div key={feature.name} className="flex items-start gap-4 p-4 rounded-lg bg-zinc-900/50 border border-zinc-800 transition-transform hover:scale-105 hover:border-indigo-500/50">
                 <div className="flex-shrink-0">{feature.icon}</div>
                 <div>
