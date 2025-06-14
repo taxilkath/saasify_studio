@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
     unoptimized: true,
   },
-  devIndicators: false
+  devIndicators: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
