@@ -2,6 +2,12 @@
   "name": "saasify-studio",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "@clerk/nextjs": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -61,12 +67,5 @@
     "tailwindcss-scrollbar": "^0.1.0",
     "tw-animate-css": "^1.3.2",
     "typescript": "^5"
-  },
-  {
-    "overrides": {
-      "@clerk/nextjs": {
-        "react": "$react"
-      }
-    }
   }
 }
