@@ -2,7 +2,7 @@
 
 **AI SaaS Blueprint Generator & Project Management Platform**
 
-SaaSify Studio is a full-stack, AI-powered platform designed for web developers to ideate, validate, plan, and manage SaaS application projects. It generates technical blueprints, visual diagrams, kanban tasks, and progress trackers for your projects — all driven by AI.
+SaaSify Studio is an intelligent development environment that accelerates the journey from idea to a fully-architected SaaS application. It empowers developers and entrepreneurs by generating comprehensive technical blueprints, visual user flows, and actionable project management assets—all powered by AI.
 
 ---
 

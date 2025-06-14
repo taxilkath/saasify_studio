@@ -230,7 +230,10 @@ function KanbanBoardDnd() {
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addColumnId, setAddColumnId] = useState<string | null>(null);
-
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -278,7 +281,10 @@ function KanbanBoardDnd() {
     }
     fetchKanban();
   }, [projectId, initializeBoard]);
-
+  if (!hasMounted) {
+    // Prevents SSR rendering of the DndContext, which causes hydration errors.
+    return null;
+  }
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const ticket = tickets[active.id as string];
@@ -320,7 +326,7 @@ function KanbanBoardDnd() {
   return (
     <div className=" min-h-screen">
       {/* Header */}
-     
+
 
       {/* Board */}
       <div className="p-6">

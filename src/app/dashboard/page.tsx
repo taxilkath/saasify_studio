@@ -46,7 +46,7 @@ export default function DashboardPage() {
       if (!result.success) {
         throw new Error(result.error || 'API call failed');
       }
-      
+
       const newProjectId = result.data.project._id;
       setCreateOpen(false);
       fetchProjects();
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             Welcome back, {user?.firstName || 'Creator'}!
           </h1>
-          <p className="text-muted-foreground mt-1">Manage and create your AI projects here</p>
+          <p className="text-muted-foreground mt-1">This is your command center. Manage existing blueprints or bring a new idea to life.</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="w-5 h-5 mr-2" />
@@ -178,7 +178,7 @@ export default function DashboardPage() {
         onOpenChange={setCreateOpen}
         onFormSubmit={handleFormSubmit}
       />
-      
+
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={open => {

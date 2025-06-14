@@ -1,5 +1,5 @@
 Architecture Overview for SaaSify Studio
-This document outlines the architecture of the SaaSify Studio application, a full-stack AI-powered platform for generating SaaS blueprints and managing projects.
+TThis document provides a comprehensive overview of the technical architecture for SaaSify Studio, a full-stack, AI-powered platform engineered to generate and manage SaaS project blueprints.
 
 1. Technology Stack
 The application is built on a modern, full-stack JavaScript/TypeScript foundation, leveraging Next.js for both frontend and backend capabilities.

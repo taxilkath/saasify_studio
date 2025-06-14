@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 // This metadata will be applied to all pages in the (auth) group
 export const metadata: Metadata = {
-  title: "AI Studio | Login",
-  description: "Sign in or create an account for AI Studio.",
+  title: "SaaSify Studio | Authentication ",
+  description: "Sign in or create an account to begin architecting your next SaaS.",
 };
 
 export default function AuthLayout({
