@@ -1,8 +1,8 @@
 // postcss.config.mjs
 const config = {
   plugins: {
-    tailwindcss: {},
-    // autoprefixer: {}, // autoprefixer is included by default in Next.js
+    '@tailwindcss/postcss': {}, // Use the correct package
+    autoprefixer: {},
   },
 };
 
