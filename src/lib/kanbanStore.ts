@@ -10,7 +10,7 @@ export type Ticket = {
   assignee: string;
 };
 
-type Column = {
+export type Column = {
   id: string;
   title: string;
   ticketIds: string[];

@@ -1,0 +1,41 @@
+# docker-compose.yml
+services:
+  # Next.js App
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: saasify-studio-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        ./wait-for-it.sh db:5432 --timeout=30 --
+        echo 'Database is ready. Running migrations...' &&
+        npx prisma migrate deploy &&
+        echo 'Migrations complete. Starting server...' &&
+        npm start
+      "
+
+  # PostgreSQL Database
+  db:
+    image: postgres:14-alpine
+    container_name: saasify-studio-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password # <-- IMPORTANT: Change this in production
+      POSTGRES_DB: saasifydb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # This exposes the database to your host machine on port 5432
+      # Useful for connecting with a GUI client like pgAdmin or DataGrip
+      - "5432:5432"
+
+volumes:
+  postgres_data: 

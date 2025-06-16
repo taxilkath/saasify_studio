@@ -9,15 +9,16 @@ import {
   DragEndEvent,
   DragStartEvent,
 } from '@dnd-kit/core';
-import { useKanbanStore, Ticket } from '@/lib/kanbanStore';
+import { useKanbanStore, Ticket, Column as KanbanColumnType } from '@/lib/kanbanStore';
 import { v4 as uuidv4 } from 'uuid';
 import { useDroppable } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { DragOverlay } from '@dnd-kit/core';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
+import debounce from 'lodash.debounce';
 
 type KanbanColumnProps = {
   id: string;
@@ -71,12 +72,12 @@ const KanbanColumn = ({ id, title, children, onAdd, count }: KanbanColumnProps) 
 
 
 const KanbanTicket = ({ ticket, isDragging = false }: { ticket: Ticket; isDragging?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useDraggable({ id: ticket.id });
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: ticket.id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
     opacity: isDragging ? 0 : 1,
+    transition: 'transform 0.2s ease',
   };
 
   const getPriorityColor = (priority: string) => {
@@ -231,10 +232,11 @@ function KanbanBoardDnd() {
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addColumnId, setAddColumnId] = useState<string | null>(null);
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const initialLoadComplete = useRef(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -246,43 +248,99 @@ function KanbanBoardDnd() {
   const initializeBoard = useKanbanStore((state) => state.initializeBoard);
 
   const params = useParams();
-  const projectId = params?.id;
+  const projectId = params?.id as string;
 
-  useEffect(() => {
-    async function fetchKanban() {
-      if (!projectId) return;
-      const res = await fetch(`/api/projects/${projectId}`);
-      const json = await res.json();
-      if (!json.success) return;
-      const kanban = json.data?.blueprint?.content?.kanban_tickets;
-      if (!kanban) return;
+  // --- SAVE LOGIC ---
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (boardColumns: KanbanColumnType[], boardTickets: Record<string, Ticket>) => {
+        if (!projectId) return;
 
-      // Map backend columns and tickets to frontend format
-      const columns = Object.entries(kanban.columns).map(([key, col]: [string, any]) => ({
-        id: key,
-        title: col.title,
-        ticketIds: (col.tickets || []).map((t: any) => t.id),
-      }));
-
-      const tickets: Record<string, Ticket> = {};
-      Object.values(kanban.columns).forEach((col: any) => {
-        (col.tickets || []).forEach((t: any) => {
-          tickets[t.id] = {
-            id: t.id,
-            title: t.title,
-            description: t.description,
-            tags: [], // or map tags if present
-            priority: t.priority || 'low',
-            assignee: t.assignee || '',
+        const backendColumns: Record<string, { title: string; tickets: Ticket[] }> = {};
+        boardColumns.forEach((col) => {
+          backendColumns[col.id] = {
+            title: col.title,
+            tickets: col.ticketIds.map((id: string) => boardTickets[id]).filter(Boolean),
           };
         });
-      });
 
-      initializeBoard(columns, tickets);
+        setIsSaving(true);
+        try {
+          await fetch(`/api/kanban/${projectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columns: backendColumns }),
+          });
+        } catch (error) {
+          console.error('Failed to save kanban board', error);
+        } finally {
+          setIsSaving(false);
+        }
+      }, 1500),
+    [projectId]
+  );
+
+  useEffect(() => {
+    if (!initialLoadComplete.current || isLoading) {
+      return;
+    }
+    debouncedSave(columns, tickets);
+    return () => debouncedSave.cancel();
+  }, [columns, tickets, isLoading, debouncedSave]);
+
+
+  // --- FETCH LOGIC ---
+  useEffect(() => {
+    async function fetchKanban() {
+      if (!projectId) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/kanban/${projectId}`);
+        const json = await res.json();
+        
+        if (!json.success || !json.data || !json.data.columns) {
+            initializeBoard([], {});
+            return;
+        }
+
+        const backendColumns = json.data.columns;
+
+        const columns = Object.entries(backendColumns).map(([key, col]: [string, any]) => ({
+          id: key,
+          title: col.title,
+          ticketIds: (col.tickets || []).map((t: any) => t.id),
+        }));
+
+        const tickets: Record<string, Ticket> = {};
+        Object.values(backendColumns).forEach((col: any) => {
+          (col.tickets || []).forEach((t: any) => {
+            tickets[t.id] = {
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              tags: t.tags || [],
+              priority: t.priority || 'low',
+              assignee: t.assignee || 'Unassigned',
+            };
+          });
+        });
+
+        initializeBoard(columns, tickets);
+      } catch (err) {
+        console.error("Failed to load Kanban data:", err);
+        initializeBoard([], {}); // Start with an empty board on error
+      } finally {
+        setIsLoading(false);
+        initialLoadComplete.current = true;
+      }
     }
     fetchKanban();
   }, [projectId, initializeBoard]);
-  if (!hasMounted) {
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen p-6">
         <div className="flex gap-6 overflow-x-auto pb-6">
@@ -348,12 +406,21 @@ function KanbanBoardDnd() {
   };
 
   return (
-    <div className=" min-h-screen">
-      {/* Header */}
-
-
-      {/* Board */}
+    <div className="min-h-screen">
       <div className="p-6">
+         <div className="absolute top-4 right-4 z-10 flex items-center gap-2 text-sm px-3 py-1.5 rounded-full bg-card/80 border border-border backdrop-blur-sm">
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin"/>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 text-green-500"/>
+                <span>All changes saved</span>
+              </>
+            )}
+          </div>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

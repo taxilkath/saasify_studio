@@ -1,29 +1,126 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuth } from '@clerk/nextjs/server';
+import { generateObject } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
 
 // OpenAI configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
-// Function to extract JSON from string response
-function extractJSON(text: string) {
-  try {
-    // Find the first { and last } to extract JSON
-    const startIndex = text.indexOf('{');
-    const lastIndex = text.lastIndexOf('}');
 
-    if (startIndex === -1 || lastIndex === -1 || startIndex >= lastIndex) {
-      throw new Error('No valid JSON found in response');
-    }
-
-    const jsonStr = text.substring(startIndex, lastIndex + 1);
-    return JSON.parse(jsonStr);
-  } catch (error) {
-    console.error('JSON extraction error:', error);
-    throw new Error('Failed to parse JSON from AI response');
-  }
-}
+const blueprintSchema = z.object({
+  platform: z.object({
+    name: z.string(),
+    tagline: z.string(),
+    description: z.string(),
+  }),
+  market_feasibility_analysis: z.object({
+    overall_score: z.number(),
+    metrics: z.array(z.object({
+      label: z.string(),
+      score: z.number(),
+      description: z.string(),
+    })),
+  }),
+  suggested_improvements: z.array(z.string()),
+  core_features: z.array(z.object({
+    name: z.string(),
+    description: z.string(),
+  })),
+  technical_requirements: z.object({
+    recommended_expertise_level: z.string(),
+    development_timeline: z.string(),
+    team_size: z.string(),
+    suggested_tech_stack: z.object({
+      frontend: z.object({
+        framework: z.string(),
+        library: z.string(),
+        styling: z.string(),
+        animations: z.string(),
+        language: z.string(),
+      }),
+      backend: z.object({
+        database: z.string(),
+        orm: z.string(),
+        ai_ml_framework: z.string(),
+        authentication: z.string(),
+        integrations_sdk: z.string(),
+        task_queue: z.string(),
+      }),
+      infrastructure: z.object({
+        hosting: z.string(),
+        cdn: z.string(),
+        monitoring: z.string(),
+        analytics: z.string(),
+        logging: z.string(),
+      }),
+    }),
+  }),
+  revenue_model: z.object({
+    primary_streams: z.array(z.string()),
+    pricing_structure: z.string(),
+  }),
+  recommended_pricing_plans: z.array(z.object({
+    name: z.string(),
+    price: z.string(),
+    target: z.string(),
+    features: z.array(z.string()),
+    limitations: z.array(z.string()).optional(),
+    tag: z.string().optional(),
+    additional_benefits: z.array(z.string()).optional(),
+    premium_features: z.array(z.string()).optional(),
+  })),
+  competitive_advantages: z.array(z.string()),
+  potential_challenges: z.array(z.string()),
+  success_metrics: z.array(z.string()),
+  user_flow_diagram: z.object({
+    description: z.string(),
+    initialNodes: z.array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        position: z.object({ x: z.number(), y: z.number() }),
+        data: z.object({
+          title: z.string(),
+          description: z.string(),
+          checklist: z.array(
+            z.object({
+              id: z.string(),
+              label: z.string(),
+              status: z.enum(["done", "in-progress", "pending"]),
+            })
+          ),
+        }),
+      })
+    ),
+    initialEdges: z.array(
+      z.object({
+        id: z.string(),
+        source: z.string(),
+        target: z.string(),
+        animated: z.boolean(),
+        label: z.string().optional(),
+      })
+    ),
+  }),
+  kanban_tickets: z.object({
+    description: z.string(),
+    columns: z.record(z.object({
+      title: z.string(),
+      tickets: z.array(z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string(),
+        priority: z.string(),
+        story_points: z.number(),
+        assignee: z.string().optional(),
+        labels: z.array(z.string()).optional(),
+      })),
+    })),
+  }),
+});
 
 // Function to call OpenAI API
 async function callOpenAI(prompt: string) {
@@ -34,45 +131,14 @@ async function callOpenAI(prompt: string) {
 
     console.log(`Calling OpenAI API with model: ${OPENAI_MODEL}`);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert AI SaaS architect and technical consultant. You provide comprehensive, detailed blueprints for AI SaaS projects with practical, actionable recommendations. IMPORTANT: Return ONLY valid JSON without any markdown formatting, explanations, or additional text.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0.7,
-        top_p: 0.9,
-      }),
+    const { object } = await generateObject({
+      model: openai(process.env.OPENAI_MODEL || 'gpt-4o-mini'),
+      system: 'You are an expert AI SaaS architect and technical consultant. You provide comprehensive, detailed blueprints for AI SaaS projects with practical, actionable recommendations. IMPORTANT: Return ONLY valid JSON that adheres to the provided schema.',
+      prompt: prompt,
+      schema: blueprintSchema,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
     console.log('OpenAI response received successfully');
-
-    const aiResponseText = data.choices[0].message.content;
-
-    // Extract and parse JSON from the response
-    const parsedJSON = extractJSON(aiResponseText);
-
-    return parsedJSON;
+    return object;
   } catch (error) {
     console.error('OpenAI API call failed:', error);
     throw error;
@@ -332,9 +398,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Platform Entry",
           "description": "Admin or Employee signs up/logs in",
           "checklist": [
-            { "label": "Admin Registration/Login", "status": "done" },
-            { "label": "Employee Onboarding (via invite)", "status": "done" },
-            { "label": "Profile Setup & Preferences (Employee)", "status": "in-progress" }
+            { "id": "cl-1-1", "label": "Admin Registration/Login", "status": "done" },
+            { "id": "cl-1-2", "label": "Employee Onboarding (via invite)", "status": "done" },
+            { "id": "cl-1-3", "label": "Profile Setup & Preferences (Employee)", "status": "in-progress" }
           ]
         }
       },
@@ -346,9 +412,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Admin Dashboard",
           "description": "Central hub for culture management",
           "checklist": [
-            { "label": "Team Management", "status": "done" },
-            { "label": "Integration Setup (Slack, Teams, HRIS)", "status": "done" },
-            { "label": "Analytics & Reporting", "status": "in-progress" }
+            { "id": "cl-2-1", "label": "Team Management", "status": "done" },
+            { "id": "cl-2-2", "label": "Integration Setup (Slack, Teams, HRIS)", "status": "done" },
+            { "id": "cl-2-3", "label": "Analytics & Reporting", "status": "in-progress" }
           ]
         }
       },
@@ -360,9 +426,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Employee Dashboard",
           "description": "Personalized view for daily engagement",
           "checklist": [
-            { "label": "Upcoming Activities", "status": "done" },
-            { "label": "Recognition Feed", "status": "in-progress" },
-            { "label": "Mental Health Check-in", "status": "pending" }
+            { "id": "cl-3-1", "label": "Upcoming Activities", "status": "done" },
+            { "id": "cl-3-2", "label": "Recognition Feed", "status": "in-progress" },
+            { "id": "cl-3-3", "label": "Mental Health Check-in", "status": "pending" }
           ]
         }
       },
@@ -374,9 +440,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Activity Management (Admin)",
           "description": "Admin creates/schedules activities",
           "checklist": [
-            { "label": "Browse Activity Library", "status": "done" },
-            { "label": "Schedule Automated Activity", "status": "done" },
-            { "label": "Review AI Suggestions", "status": "in-progress" }
+            { "id": "cl-4-1", "label": "Browse Activity Library", "status": "done" },
+            { "id": "cl-4-2", "label": "Schedule Automated Activity", "status": "done" },
+            { "id": "cl-4-3", "label": "Review AI Suggestions", "status": "in-progress" }
           ]
         }
       },
@@ -388,9 +454,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Recognition Management (Admin/Employee)",
           "description": "Sending and viewing recognition",
           "checklist": [
-            { "label": "Send Peer-to-Peer Recognition", "status": "done" },
-            { "label": "Send Manager Recognition", "status": "in-progress" },
-            { "label": "View Recognition History", "status": "pending" }
+            { "id": "cl-5-1", "label": "Send Peer-to-Peer Recognition", "status": "done" },
+            { "id": "cl-5-2", "label": "Send Manager Recognition", "status": "in-progress" },
+            { "id": "cl-5-3", "label": "View Recognition History", "status": "pending" }
           ]
         }
       },
@@ -402,9 +468,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Well-being Check-ins (Employee)",
           "description": "Employee conducts and views check-ins",
           "checklist": [
-            { "label": "Daily Mood Check", "status": "done" },
-            { "label": "Access Resource Library", "status": "in-progress" },
-            { "label": "View Personal Well-being Trends", "status": "pending" }
+            { "id": "cl-6-1", "label": "Daily Mood Check", "status": "done" },
+            { "id": "cl-6-2", "label": "Access Resource Library", "status": "in-progress" },
+            { "id": "cl-6-3", "label": "View Personal Well-being Trends", "status": "pending" }
           ]
         }
       },
@@ -416,9 +482,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "AI Recommendation Engine",
           "description": "Generates personalized suggestions",
           "checklist": [
-            { "label": "Process Employee Preferences", "status": "done" },
-            { "label": "Analyze Schedule & Availability", "status": "in-progress" },
-            { "label": "Generate Activity/Recognition Suggestions", "status": "pending" }
+            { "id": "cl-7-1", "label": "Process Employee Preferences", "status": "done" },
+            { "id": "cl-7-2", "label": "Analyze Schedule & Availability", "status": "in-progress" },
+            { "id": "cl-7-3", "label": "Generate Activity/Recognition Suggestions", "status": "pending" }
           ]
         }
       },
@@ -430,9 +496,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Integration Hub",
           "description": "Handles communication with external platforms",
           "checklist": [
-            { "label": "Send Slack/Teams Notifications", "status": "done" },
-            { "label": "Sync with HRIS Data", "status": "in-progress" },
-            { "label": "Process API Calls", "status": "pending" }
+            { "id": "cl-8-1", "label": "Send Slack/Teams Notifications", "status": "done" },
+            { "id": "cl-8-2", "label": "Sync with HRIS Data", "status": "in-progress" },
+            { "id": "cl-8-3", "label": "Process API Calls", "status": "pending" }
           ]
         }
       },
@@ -444,9 +510,9 @@ json :i will give idea to llm and in return i need thistype of json{
           "title": "Analytics & Reporting Module",
           "description": "Presents key insights to admins",
           "checklist": [
-            { "label": "Engagement Metrics Dashboard", "status": "done" },
-            { "label": "Recognition Trends Report", "status": "in-progress" },
-            { "label": "Anonymized Well-being Insights", "status": "pending" }
+            { "id": "cl-9-1", "label": "Engagement Metrics Dashboard", "status": "done" },
+            { "id": "cl-9-2", "label": "Recognition Trends Report", "status": "in-progress" },
+            { "id": "cl-9-3", "label": "Anonymized Well-being Insights", "status": "pending" }
           ]
         }
       }
@@ -622,11 +688,12 @@ json :i will give idea to llm and in return i need thistype of json{
 
     // Call OpenAI API and get parsed JSON
     const aiResponseJSON = await callOpenAI(prompt);
-    console.log(aiResponseJSON);
-    console.log("got json from openai ");
     if (!aiResponseJSON) {
       throw new Error('No response received from AI model');
     }
+
+    // --- FIX: Separate userflow and kanban data to prevent duplication ---
+    const { user_flow_diagram, kanban_tickets, ...blueprintContent } = aiResponseJSON;
 
     await prisma.project.create({
       data: {
@@ -636,18 +703,18 @@ json :i will give idea to llm and in return i need thistype of json{
         blueprint: {
           create: {
             title: `${projectTitle} Blueprint`,
-            content: aiResponseJSON,
+            content: blueprintContent, // Store only the remaining blueprint content
           },
         },
         userFlow: {
           create: {
-            nodes: aiResponseJSON.user_flow_diagram?.initialNodes || [],
-            edges: aiResponseJSON.user_flow_diagram?.initialEdges || [],
+            nodes: user_flow_diagram?.initialNodes || [],
+            edges: user_flow_diagram?.initialEdges || [],
           },
         },
         kanban: {
           create: {
-            columns: aiResponseJSON.kanban_tickets?.columns || {},
+            columns: kanban_tickets?.columns || {},
           },
         },
         memoryBank: {
