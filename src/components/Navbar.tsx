@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, LayoutDashboard, Users, BookOpen, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -16,6 +16,7 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isSignedIn } = useUser();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -104,7 +105,14 @@ export default function Navbar() {
                   <ThemeSwitcher />
                 </div>
                 <div className={clsx('flex items-center gap-3 px-1 py-1 rounded-xl', isCollapsed && "justify-center")}>
-                  <UserButton afterSignOutUrl="/sign-in" />
+                  <UserButton 
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-9 h-9",
+                      }
+                    }}
+                  />
                   <div className={clsx("flex flex-col", isCollapsed && "md:hidden")}>
                     <p className="text-sm font-semibold text-zinc-900 dark:text-white">My Account</p>
                   </div>

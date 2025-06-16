@@ -64,10 +64,15 @@ const PriorityBadge = ({ priority }: { priority: 'High' | 'Medium' | 'Low' }) =>
 };
 
 const Ticket = ({ ticket, isOverlay = false }: { ticket: TicketData; isOverlay?: boolean }) => {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: ticket.id, data: { ticket } });
-  const style = {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ 
+    id: ticket.id, 
+    data: { ticket } 
+  });
+
+  const style = transform ? {
     transform: CSS.Transform.toString(transform),
-  };
+    transition: 'transform 200ms ease',
+  } : undefined;
 
   return (
     <div
@@ -75,13 +80,29 @@ const Ticket = ({ ticket, isOverlay = false }: { ticket: TicketData; isOverlay?:
       style={style}
       {...listeners}
       {...attributes}
-      className={`p-2 bg-white dark:bg-zinc-800 rounded text-xs shadow-md space-y-1.5 cursor-grab active:cursor-grabbing ${isOverlay ? 'ring-2 ring-purple-500' : ''}`}
+      className={`
+        p-3 bg-white dark:bg-zinc-800/90 rounded-lg text-xs
+        shadow-sm hover:shadow-md
+        border border-zinc-200 dark:border-zinc-700
+        transition-all duration-200 ease-in-out
+        cursor-grab active:cursor-grabbing
+        ${isOverlay ? 'shadow-xl scale-105 rotate-3 border-purple-500/50 bg-white dark:bg-zinc-800' : ''}
+        hover:border-purple-500/30
+        space-y-2
+      `}
     >
-      <p className="text-zinc-800 dark:text-zinc-200">{ticket.title}</p>
-      <div className="flex items-center gap-2">
+      <p className="text-zinc-800 dark:text-zinc-200 font-medium">{ticket.title}</p>
+      <div className="flex items-center gap-2 flex-wrap">
         <PriorityBadge priority={ticket.priority} />
         {ticket.tags.map(tag => (
-          <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-zinc-200 dark:bg-zinc-700 rounded-full text-zinc-600 dark:text-zinc-300">{tag}</span>
+          <span 
+            key={tag} 
+            className="px-1.5 py-0.5 text-[10px] bg-zinc-100 dark:bg-zinc-700 
+              rounded-full text-zinc-600 dark:text-zinc-300
+              border border-zinc-200 dark:border-zinc-600"
+          >
+            {tag}
+          </span>
         ))}
       </div>
     </div>
@@ -94,10 +115,21 @@ const Column = ({ column }: { column: ColumnData }) => {
   return (
     <div
       ref={setNodeRef}
-      className={`bg-zinc-100 dark:bg-black/50 p-3 rounded-lg border border-zinc-200 dark:border-white/10 space-y-2 transition-colors ${isOver ? 'bg-purple-500/10' : ''}`}
+      className={`
+        bg-zinc-50 dark:bg-zinc-900/50 
+        p-4 rounded-xl
+        border border-zinc-200 dark:border-zinc-800
+        transition-all duration-200 ease-in-out
+        ${isOver ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-500/30 scale-[1.02]' : ''}
+      `}
     >
-      <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-200 px-1">{column.title}</h4>
-      <div className="space-y-2 min-h-[100px]">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-bold text-sm text-zinc-800 dark:text-zinc-200">{column.title}</h4>
+        <span className="text-xs px-2 py-1 bg-zinc-200/50 dark:bg-zinc-800 rounded-full text-zinc-600 dark:text-zinc-400">
+          {column.tickets.length}
+        </span>
+      </div>
+      <div className="space-y-3 min-h-[120px]">
         {column.tickets.map(ticket => (
           <Ticket key={ticket.id} ticket={ticket} />
         ))}
@@ -109,47 +141,68 @@ const Column = ({ column }: { column: ColumnData }) => {
 export default function InteractiveKanban() {
   const [columns, setColumns] = useState<ColumnData[]>(initialColumns);
   const [activeTicket, setActiveTicket] = useState<TicketData | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [hasMounted, setHasMounted] = useState(false);
 
-  const handleDragStart = (event: any) => {
-    setActiveTicket(event.active.data.current.ticket);
-  };
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+        delay: 100,
+        tolerance: 5,
+      },
+    })
+  );
+
   useEffect(() => {
     setHasMounted(true);
-  }, []); const [hasMounted, setHasMounted] = useState(false);
+  }, []);
+
+  const handleDragStart = (event: any) => {
+    const { active } = event;
+    setActiveTicket(active.data.current?.ticket || null);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveTicket(null);
     const { active, over } = event;
+
+    setActiveTicket(null);
 
     if (!over || active.id === over.id) return;
 
     setColumns(prev => {
       const newColumns = prev.map(col => ({ ...col, tickets: [...col.tickets] }));
-      const activeColumn = newColumns.find(col => col.tickets.some(t => t.id === active.id));
-      const overColumn = newColumns.find(col => col.id === over.id);
+      const sourceCol = newColumns.find(col => col.tickets.some(t => t.id === active.id));
+      const destCol = newColumns.find(col => col.id === over.id);
 
-      if (!activeColumn || !overColumn) return prev;
+      if (!sourceCol || !destCol) return prev;
 
-      const activeIndex = activeColumn.tickets.findIndex(t => t.id === active.id);
-      const [movedTicket] = activeColumn.tickets.splice(activeIndex, 1);
-      overColumn.tickets.push(movedTicket);
+      const ticketIndex = sourceCol.tickets.findIndex(t => t.id === active.id);
+      const [movedTicket] = sourceCol.tickets.splice(ticketIndex, 1);
+      destCol.tickets.push(movedTicket);
 
       return newColumns;
     });
   };
+
   if (!hasMounted) {
-    // Prevents SSR rendering of the DndContext, which causes hydration errors.
     return null;
   }
+
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext 
+      sensors={sensors} 
+      onDragStart={handleDragStart} 
+      onDragEnd={handleDragEnd}
+    >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
         {columns.map(col => (
           <Column key={col.id} column={col} />
         ))}
       </div>
-      <DragOverlay>
+      <DragOverlay dropAnimation={{
+        duration: 200,
+        easing: 'ease',
+      }}>
         {activeTicket ? <Ticket ticket={activeTicket} isOverlay /> : null}
       </DragOverlay>
     </DndContext>

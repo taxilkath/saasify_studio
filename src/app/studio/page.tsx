@@ -48,25 +48,30 @@ export default function StudioHubPage() {
       ) : (
         // The grid of projects if they exist
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {projects.map((project: any) => (
-            <div
-              key={project._id}
-              onClick={() => handleProjectClick(project._id)}
-              className="cursor-pointer group flex flex-col gap-4 rounded-xl border bg-card text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary"
-            >
-              <div className="flex-grow">
-                <h2 className="text-lg font-bold text-foreground group-hover:text-primary">
-                  {project.name}
-                </h2>
-                <p className="text-sm text-muted-foreground line-clamp-3 mt-1">
-                  {project.description}
-                </p>
+          {projects.map((project) => {
+            const projectId = project.id || project._id;
+            if (!projectId) return null; // Skip if no valid ID exists
+            
+            return (
+              <div
+                key={projectId}
+                onClick={() => handleProjectClick(projectId)}
+                className="cursor-pointer group flex flex-col gap-4 rounded-xl border bg-card text-card-foreground p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary"
+              >
+                <div className="flex-grow">
+                  <h2 className="text-lg font-bold text-foreground group-hover:text-primary">
+                    {project.name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground line-clamp-3 mt-1">
+                    {project.description}
+                  </p>
+                </div>
+                <div className="w-full mt-4 text-sm font-semibold text-primary flex items-center justify-end">
+                  Open Workspace →
+                </div>
               </div>
-              <div className="w-full mt-4 text-sm font-semibold text-primary flex items-center justify-end">
-                Open Workspace →
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

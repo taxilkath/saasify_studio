@@ -19,12 +19,14 @@ import { useUser } from '@clerk/nextjs';
 // --- Main Landing Page Component ---
 export default function LandingPage() {
   return (
-    <div className="w-full min-h-screen bg-zinc-50 dark:bg-[#111] text-zinc-800 dark:text-zinc-200 overflow-x-hidden">
-      <div className="fixed inset-0 z-0 opacity-20 hidden dark:block">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#4a00e0,transparent_40%)] opacity-50 animate-pulse"></div>
-        <div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(circle_at_100%_100%,#8e2de2,transparent_40%)] opacity-30 animate-pulse-slow"></div>
-        <div className="absolute top-0 right-0 h-1/2 w-1/2 bg-[radial-gradient(circle_at_0%_0%,#4a00e0,transparent_40%)] opacity-30 animate-pulse-slow-reverse"></div>
+    <div className="w-full min-h-screen bg-white dark:bg-black text-zinc-800 dark:text-zinc-200 overflow-x-hidden">
+      {/* Modern Animated Background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#0D081F] dark:via-black dark:to-[#1C0D25]"></div>
+        <div className="absolute top-0 left-0 h-[50vh] w-[50vw] -translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle_at_center,_rgba(167,139,250,0.2),_transparent_70%)] animate-pulse-slow"></div>
+        <div className="absolute bottom-0 right-0 h-[50vh] w-[50vw] translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.15),_transparent_70%)] animate-pulse-slow-reverse"></div>
       </div>
+
       <div className="relative z-10">
         <Header />
         <main>
@@ -79,6 +81,7 @@ const AnimatedTerminal = () => {
     </div>
   );
 };
+
 const HowItWorksSection = () => {
   return (
     <section className="py-24 bg-black/20">
@@ -99,7 +102,14 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Video Player with App Frame */}
-          <div className="max-w-4xl mx-auto bg-zinc-900/50 rounded-xl border border-white/10 shadow-2xl shadow-purple-500/10 backdrop-blur-sm overflow-hidden">
+          <motion.div
+            whileInView={{
+              boxShadow: "0 0 40px 10px rgba(138, 92, 246, 0.15)"
+            }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.5 }}
+            className="max-w-4xl mx-auto bg-zinc-900/50 rounded-xl border border-white/10 shadow-2xl shadow-purple-500/10 backdrop-blur-sm overflow-hidden"
+          >
             {/* Window Header */}
             <div className="h-10 bg-zinc-800/80 flex items-center gap-2 px-4">
               <div className="w-3 h-3 rounded-full bg-zinc-600"></div>
@@ -118,14 +128,14 @@ const HowItWorksSection = () => {
                 Your browser does not support the video tag.
               </video>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>
   );
 };
 const DeveloperSection = () => (
-  <section className="py-24 bg-black/20">
+  <section id="developers" className="py-24 bg-black/20">
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         {/* Left Column: Text Content */}
@@ -136,7 +146,7 @@ const DeveloperSection = () => (
             transition={{ duration: 0.5 }}
             viewport={{ once: true, amount: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full text-sm mb-4 border border-purple-500/20">
+            <div className="inline-flex items-center gap-2 bg-purple-500/10 text-purple-300 px-3 py-1 rounded-full text-sm mb-4 border border-purple-500/20">
               <Bot className="w-5 h-5" />
               For Developers
             </div>
@@ -161,6 +171,13 @@ const DeveloperSection = () => (
                   <p className="text-zinc-400">Automatically provides your AI agent with the latest project context.</p>
                 </div>
               </div>
+            </div>
+            
+            {/* Coming Soon Badge */}
+            <div className="mt-8 inline-flex items-center gap-2 bg-indigo-500/10 text-indigo-300 px-4 py-2 rounded-full text-sm border border-indigo-500/20 animate-pulse">
+              <Workflow className="w-5 h-5" />
+              <span className="font-semibold">Coming Soon</span>
+              <span className="px-2 py-0.5 bg-indigo-500/20 rounded-full text-xs">Q2 2024</span>
             </div>
           </motion.div>
         </div>
@@ -339,9 +356,31 @@ const ShowcaseSection = () => {
 };
 
 const navLinks = [
-  { name: 'Features', href: '#features' },
-  { name: 'Pricing', href: '#pricing' },
-  { name: 'Open Source', href: '#opensource' },
+  { 
+    name: 'Features', 
+    href: '#features',
+    icon: Cpu
+  },
+  { 
+    name: 'Showcase', 
+    href: '#showcase',
+    icon: LayoutGrid
+  },
+  { 
+    name: 'Developers', 
+    href: '#developers',
+    icon: Code
+  },
+  { 
+    name: 'Pricing', 
+    href: '#pricing',
+    icon: BarChart3
+  },
+  { 
+    name: 'Open Source', 
+    href: '#opensource',
+    icon: Github
+  },
 ];
 
 const Header = () => {
@@ -352,37 +391,62 @@ const Header = () => {
     router.push(isSignedIn ? '/dashboard' : '/sign-in');
   };
 
-  return (<header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/30 backdrop-blur-xl border-b border-zinc-200 dark:border-white/5">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-between h-16">
-        <Link href="#" className="flex items-center gap-2 group">
-          <div className="p-2 bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 rounded-lg group-hover:bg-zinc-200 dark:group-hover:bg-white/20 transition-all">
-            <Shapes className="w-5 h-5 text-indigo-600 dark:text-purple-400" />
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/30 backdrop-blur-xl border-b border-zinc-200 dark:border-white/5">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link href="#" className="flex items-center gap-2 group">
+            <div className="p-2 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 border border-zinc-200 dark:border-white/10 rounded-lg group-hover:bg-gradient-to-tr group-hover:from-indigo-500/20 group-hover:to-purple-500/20 transition-all duration-300">
+              <Shapes className="w-5 h-5 text-indigo-600 dark:text-purple-400 transform group-hover:rotate-12 transition-transform duration-300" />
+            </div>
+            <span className="text-lg font-bold tracking-tighter text-zinc-900 dark:text-zinc-100 font-['--font-geist-mono']">
+              SaaSify
+            </span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className="group relative px-3 py-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <link.icon className="w-4 h-4 opacity-70 group-hover:opacity-100 transform group-hover:scale-110 transition-all duration-300" />
+                  {link.name}
+                </span>
+                <span className="absolute inset-0 bg-zinc-100 dark:bg-white/10 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300 origin-center" />
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Button 
+              variant="ghost" 
+              asChild 
+              className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white rounded-full group transition-all duration-300"
+            >
+              <Link href="/sign-in" className="flex items-center gap-2">
+                <Users className="w-4 h-4 transform group-hover:scale-110 transition-transform duration-300" />
+                Sign In
+              </Link>
+            </Button>
+            <Button 
+              onClick={handleGetStartedClick} 
+              className="group relative overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-purple-500/40 hover:scale-105 rounded-full px-5 py-2"
+            >
+              <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              <span className="relative flex items-center gap-2">
+                Get Started
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-all duration-300" />
+              </span>
+            </Button>
           </div>
-          <span className="text-lg font-bold tracking-tighter text-zinc-900 dark:text-zinc-100 font-['--font-geist-mono']">
-            SaaSify
-          </span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-          {navLinks.map((link) => (
-            <Link key={link.name} href={link.href} className="hover:text-zinc-900 dark:hover:text-white transition-colors">
-              {link.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center gap-2 sm:gap-4">
-          <ThemeSwitcher />
-          <Button variant="ghost" asChild className="hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hidden sm:flex">
-            <Link href="/sign-in">Sign In</Link>
-          </Button>
-          <Button onClick={handleGetStartedClick} className="group relative overflow-hidden bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-2xl transition-all duration-300 hover:scale-105">
-            Get Started
-          </Button>
         </div>
       </div>
-    </div>
-  </header>
-  )
+    </header>
+  );
 };
 
 const visuals = [
@@ -499,7 +563,7 @@ const HeroSection = () => {
   const FADE_UP_ANIMATION_VARIANTS = {
     hidden: { opacity: 0, y: 10 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 20 } },
-  };
+  } as const;
 
   return (
     <section className="pt-32 pb-24 text-center">
@@ -519,7 +583,7 @@ const HeroSection = () => {
           </Link>
         </motion.div>
 
-        <motion.h1 variants={FADE_UP_ANIMATION_VARIANTS} className="mt-6 text-5xl sm:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500 animate-background-pan mb-6">
+        <motion.h1 variants={FADE_UP_ANIMATION_VARIANTS} className="mt-6 text-5xl sm:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-zinc-300 dark:to-purple-400 animate-background-pan mb-6">
           From Idea to Impact, <br /> Instantly Architected.
         </motion.h1>
 
@@ -528,21 +592,21 @@ const HeroSection = () => {
         </motion.p>
 
         <motion.div variants={FADE_UP_ANIMATION_VARIANTS} className="flex items-center justify-center gap-4">
-          <Button onClick={handleGetStartedClick} size="lg" className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-2xl shadow-purple-500/20 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/40 px-6 py-3">
-            Build Your Blueprint
-            <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-
+          <Button onClick={handleGetStartedClick} size="lg" className="group relative overflow-hidden bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold shadow-lg shadow-purple-500/30 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/50 px-8 py-3 rounded-full">
+            <span className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300"></span>
+            <span className="relative flex items-center">
+              Build Your Blueprint
+              <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
           </Button>
         </motion.div>
 
         <motion.div variants={FADE_UP_ANIMATION_VARIANTS} className="mt-20">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Backed by the world's best innovators</p>
-          <div className="mt-6 flex justify-center items-center gap-8 opacity-60">
-            <Cpu className="w-10 h-10" />
-            <Bot className="w-10 h-10" />
-            <Code className="w-10 h-10" />
-            <Users className="w-10 h-10" />
-            <LayoutGrid className="w-10 h-10" />
+          <div className="mt-6 flex justify-center items-center gap-x-12 gap-y-4 flex-wrap">
+            {[Cpu, Bot, Code, Users, LayoutGrid].map((Icon, i) => (
+              <Icon key={i} className="w-10 h-10 text-zinc-400 dark:text-zinc-600 transition-all duration-300 hover:text-zinc-600 dark:hover:text-zinc-400 hover:scale-110" />
+            ))}
           </div>
         </motion.div>
 
@@ -564,7 +628,7 @@ const InteractiveCard = ({ children, className }: { children: React.ReactNode, c
   return (
     <motion.div
       onMouseMove={handleMouseMove}
-      className={`group relative w-full h-full bg-white/50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/5 rounded-2xl shadow-lg ${className}`}
+      className={`group relative w-full h-full bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-white/10 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10 ${className}`}
     >
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -590,7 +654,7 @@ const FeaturesSection = () => {
     {
       icon: GitMerge,
       title: 'Visual User Flows',
-      description: 'Instantly visualize your application’s architecture and user journeys with dynamically generated diagrams.'
+      description: 'Instantly visualize your applications architecture and user journeys with dynamically generated diagrams.'
     },
     {
       icon: LayoutGrid,
@@ -617,7 +681,7 @@ const FeaturesSection = () => {
   return (
     <section id="features" className="py-24 bg-zinc-100 dark:bg-black/20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-left mb-16">
+        <div className="text-left mb-16 max-w-3xl">
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter text-zinc-900 dark:text-white">The Future of Project Planning</h2>
           <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl">AI-powered insights that give you an unfair advantage.</p>
         </div>

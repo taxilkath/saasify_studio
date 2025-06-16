@@ -7,6 +7,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { Loader2 } from 'lucide-react';
 
 // Types
 export type CustomNodeData = {
@@ -80,8 +81,17 @@ function UserFlowDiagram() {
     if (projectId) fetchBlueprint();
   }, [projectId, setNodes, setEdges]);
 
-  if (loading) return <div>Loading user flow...</div>;
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+  if (loading) return (
+    <div className="rounded-xl border border-border bg-card p-8">
+      <div className="flex items-center justify-center h-[60vh] bg-muted/20 rounded-lg">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+          <div className="text-sm text-muted-foreground animate-pulse">Loading diagram...</div>
+        </div>
+      </div>
+    </div>
+  );
+  if (error) return <div className="text-destructive text-center p-8 rounded-xl border border-destructive/20 bg-destructive/10">Error: {error}</div>;
 
   return (
     <div style={{ width: '100%', height: '60vh', minWidth: 0 }}>
@@ -93,6 +103,7 @@ function UserFlowDiagram() {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
+        
         defaultEdgeOptions={{ animated: true }}
         style={{ width: '100%', height: '100%' }}
       >

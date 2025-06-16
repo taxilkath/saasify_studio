@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DragOverlay } from '@dnd-kit/core';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 type KanbanColumnProps = {
   id: string;
@@ -282,8 +283,31 @@ function KanbanBoardDnd() {
     fetchKanban();
   }, [projectId, initializeBoard]);
   if (!hasMounted) {
-    // Prevents SSR rendering of the DndContext, which causes hydration errors.
-    return null;
+    return (
+      <div className="min-h-screen p-6">
+        <div className="flex gap-6 overflow-x-auto pb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 w-[280px] flex flex-col border border-gray-200 dark:border-gray-700 animate-pulse">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+                <div className="h-4 w-24 bg-gray-300 dark:bg-gray-700 rounded"></div>
+              </div>
+              <div className="flex flex-col gap-3 min-h-[200px]">
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow">
+                    <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-center mt-4">
+                <Loader2 className="w-6 h-6 animate-spin text-primary"/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;

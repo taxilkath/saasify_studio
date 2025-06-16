@@ -82,10 +82,42 @@ function StudioPageContent() {
 
       <div>
         {selectedTab === "blueprint" && <BlueprintDisplay projectId={projectId} />}
-        {selectedTab === "overview" && <OverviewSection />}
-        {selectedTab === "user-flow" && <UserFlowDiagram />}
-        {selectedTab === "tickets-board" && <KanbanBoardDnd />}
-        {selectedTab === "memory-bank" && <MemoryBankSection memoryBankContent={""} />}
+        {selectedTab === "overview" && (
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+            </div>
+          }>
+            <OverviewSection />
+          </Suspense>
+        )}
+        {selectedTab === "user-flow" && (
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+            </div>
+          }>
+            <UserFlowDiagram />
+          </Suspense>
+        )}
+        {selectedTab === "tickets-board" && (
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+            </div>
+          }>
+            <KanbanBoardDnd />
+          </Suspense>
+        )}
+        {selectedTab === "memory-bank" && (
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+            </div>
+          }>
+            <MemoryBankSection memoryBankContent={""} />
+          </Suspense>
+        )}
       </div>
     </div>
   );

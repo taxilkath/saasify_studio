@@ -1,11 +1,30 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-
-
+import { Loader2 } from "lucide-react";
 
 function MemoryBankSection({ memoryBankContent }: { memoryBankContent: string }) {
   const codeRef = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (memoryBankContent) {
+      setLoading(false);
+    }
+  }, [memoryBankContent]);
+
+  if (loading) {
+    return (
+      <div className="relative bg-zinc-900 rounded-xl border border-zinc-800 p-5 mt-4 animate-pulse">
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary"/>
+            <div className="text-sm text-muted-foreground">Loading memory bank...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleCopy = async () => {
     try {

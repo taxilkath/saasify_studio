@@ -4,9 +4,12 @@ import prisma from '@/lib/prisma'; // <-- Import Prisma client
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
+    if (!params?.id) {
+      return NextResponse.json({ success: false, error: 'Project ID is required' }, { status: 400 });
+    }
+
     const project = await prisma.project.findUnique({ // <-- Prisma query
-      where: { id },
+      where: { id: params.id },
       include: { blueprint: true },
     });
 
@@ -21,8 +24,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
-    await prisma.project.delete({ where: { id } }); // <-- Prisma query
+    if (!params?.id) {
+      return NextResponse.json({ success: false, error: 'Project ID is required' }, { status: 400 });
+    }
+
+    await prisma.project.delete({ where: { id: params.id } }); // <-- Prisma query
 
     return NextResponse.json({ success: true, message: 'Project deleted' }, { status: 200 });
   } catch (error: any) {
