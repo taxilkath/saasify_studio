@@ -1,37 +1,42 @@
 # Dockerfile
 
-# 1. Install dependencies
-FROM node:18-alpine AS deps
+# 1. Builder Stage: Build the application
+FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+
+# Copy package files and prisma schema
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
 RUN npm install
 
-# 2. Build the application
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the rest of the application source code
 COPY . .
+
 # Generate Prisma Client
 RUN npx prisma generate
-# Build the Next.js app
+
+# Build the Next.js application
 RUN npm run build
 
-# 3. Production image
-FROM node:18-alpine AS runner
+# 2. Runner Stage: Create the final, smaller image
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# Copy production assets
-COPY --from=builder /app/public ./public
+# Copy files from the builder stage
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+# ✅ CRUCIAL: Copy the prisma directory again for the runtime migrate command
+COPY --from=builder /app/prisma ./prisma
+# Copy the wait-for-it script
+COPY wait-for-it.sh ./wait-for-it.sh
+RUN chmod +x ./wait-for-it.sh
 
-# Expose the port the app runs on
+# Expose the port
 EXPOSE 3000
 
-# Start the app
-CMD ["npm", "start"] 
+# The command to run the application will be taken from docker-compose.yml
+# CMD ["npm", "start"]
