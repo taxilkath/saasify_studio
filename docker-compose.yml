@@ -10,6 +10,8 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/saasifydb?schema=public
     depends_on:
       - db
     command: >
