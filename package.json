@@ -41,6 +41,7 @@
     "@types/dagre": "^0.7.52",
     "@types/lodash.debounce": "^4.0.9",
     "ai": "^3.2.34",
+    "autoprefixer": "^10.4.17",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
