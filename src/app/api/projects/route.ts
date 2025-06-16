@@ -145,7 +145,7 @@ async function callOpenAI(prompt: string) {
   }
 }
 
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
     if (!userId) {
@@ -163,6 +163,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     return NextResponse.json({ success: false, error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
+
 
 export async function POST(req: NextRequest) {
   try {

@@ -1,28 +1,68 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from 'uuid';
 import { produce } from 'immer';
-import {
-  Dialog,
+import React, { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import ReactFlow, {
+  Background,
+  Controls,
+  Handle,
+  Position,
+  addEdge,
   useNodesState,
   useEdgesState,
-  addEdge,
-  useCallback,
-  useEffect,
-  useState,
-  useDebounce,
-  debounce
-} from '@react-flow-renderer/core';
+  Node,
+  Edge,
+  ReactFlowInstance,
+  MiniMap,
+  OnNodesChange,
+  OnEdgesChange,
+  Connection,
+  BackgroundVariant,
+  applyNodeChanges,
+  applyEdgeChanges,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { useParams } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { CheckCircle, Circle, GitBranch, Loader2, PenSquare, Plus, Save, Trash2, X } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { getLayoutedElements } from '@/utils/layout';
+import debounce from 'lodash.debounce';
 
-const UserFlowDiagram = ({ project, initialNodes, initialEdges }) => {
+// Types
+export type CustomNodeData = {
+  title: string;
+  description: string;
+  checklist: { id: string; label: string; status: 'done' | 'in-progress' | 'pending' }[];
+};
+
+// Types for component props
+type UserFlowDiagramProps = {
+  project: { id: string };
+  initialNodes: Node<CustomNodeData>[];
+  initialEdges: Edge[];
+};
+
+const UserFlowDiagram = ({ project, initialNodes, initialEdges }: UserFlowDiagramProps) => {
   const { id: projectId } = project;
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes || []);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges || []);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [editNode, setEditNode] = useState(null);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback((params : Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
   const debouncedSave = useCallback(
     debounce(async (nodesToSave, edgesToSave) => {
@@ -49,9 +89,19 @@ const UserFlowDiagram = ({ project, initialNodes, initialEdges }) => {
         toast.error("Failed to save user flow data.");
         console.error(err);
       }
-    }, [projectId, setNodes, setEdges]),
+    }, 1500),
     [projectId, setNodes, setEdges]
   );
+
+  const onCustomNodesChange: OnNodesChange = useCallback((changes) => {
+    setNodes((nds) => applyNodeChanges(changes, nds));
+    debouncedSave(nodes, edges);
+  }, [setNodes, debouncedSave, nodes, edges]);
+
+  const onCustomEdgesChange: OnEdgesChange = useCallback((changes) => {
+    setEdges((eds) => applyEdgeChanges(changes, eds));
+    debouncedSave(nodes, edges);
+  }, [setEdges, debouncedSave, nodes, edges]);
 
   useEffect(() => {
     const fetchUserFlow = async () => {
@@ -92,24 +142,17 @@ const UserFlowDiagram = ({ project, initialNodes, initialEdges }) => {
     }
   }, [projectId, setNodes, setEdges, initialNodes, initialEdges]);
 
-  // Autosave changes
-  useEffect(() => {
-    const handleChange = () => {
-      debouncedSave(nodes, edges);
-    };
-
-    onNodesChange(handleChange);
-    onEdgesChange(handleChange);
-
-    return () => {
-      onNodesChange.cancel();
-      onEdgesChange.cancel();
-    };
-  }, [onNodesChange, onEdgesChange, nodes, edges, debouncedSave]);
-
   return (
     <div>
-      {/* Render your diagram component here */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onCustomNodesChange}
+        onEdgesChange={onCustomEdgesChange}
+        onConnect={onConnect}
+      >
+        {/* Render your diagram component here */}
+      </ReactFlow>
     </div>
   );
 };
